@@ -5,6 +5,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { EntitiesModule } from './modules/entities/entities.module';
 import { RelationsModule } from './modules/relations/relations.module';
 import { SourcesModule } from './modules/sources/sources.module';
+import { VerificationModule } from './modules/verification/verification.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { SourcesModule } from './modules/sources/sources.module';
     EntitiesModule,
     RelationsModule,
     SourcesModule,
+    VerificationModule,
   ],
   controllers: [],
   providers: [],
