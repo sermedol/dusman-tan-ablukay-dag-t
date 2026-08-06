@@ -1,16 +1,34 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { SourcesService } from './sources.service';
 import { CreateSourceDto, UpdateSourceDto, LinkToEntityDto } from './dto';
+import { CurrentUser } from '../../shared/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
+
+interface User {
+  userId: string;
+  email: string;
+  roles: string[];
+  permissions: string[];
+}
 
 @Controller('sources')
 export class SourcesController {
   constructor(private sourcesService: SourcesService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() dto: CreateSourceDto) {
-    // TODO: Add @CurrentUser() to extract userId from JWT
-    const userId = 'demo-user';
-    return this.sourcesService.create(dto, userId);
+  async create(@Body() dto: CreateSourceDto, @CurrentUser() user: User) {
+    return this.sourcesService.create(dto, user.userId);
   }
 
   @Get()
@@ -44,23 +62,37 @@ export class SourcesController {
     return this.sourcesService.findById(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateSourceDto) {
-    // TODO: Add @CurrentUser() to extract userId from JWT
-    const userId = 'demo-user';
-    return this.sourcesService.update(id, dto, userId);
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateSourceDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.sourcesService.update(id, dto, user.userId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post(':id/link-to-entity')
-  async linkToEntity(@Param('id') sourceId: string, @Body() dto: LinkToEntityDto) {
+  async linkToEntity(
+    @Param('id') sourceId: string,
+    @Body() dto: LinkToEntityDto,
+    @CurrentUser() user: User,
+  ) {
     return this.sourcesService.linkToEntity(sourceId, dto.entityId, dto.evidenceType);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post(':id/link-to-relation/:relationId')
-  async linkToRelation(@Param('id') sourceId: string, @Param('relationId') relationId: string) {
+  async linkToRelation(
+    @Param('id') sourceId: string,
+    @Param('relationId') relationId: string,
+    @CurrentUser() user: User,
+  ) {
     return this.sourcesService.linkToRelation(sourceId, relationId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async delete(@Param('id') id: string) {
     return this.sourcesService.delete(id);
