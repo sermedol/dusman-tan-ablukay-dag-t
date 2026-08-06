@@ -1,0 +1,32 @@
+{
+  "name": "@umutsensen/admin",
+  "version": "0.1.0",
+  "description": "Admin panel",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "next build",
+    "start": "next start -p 3002",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "next": "^15.0.0",
+    "typescript": "^5.6.3",
+    "@umutsensen/auth": "workspace:*",
+    "axios": "^1.7.7",
+    "zustand": "^4.5.0",
+    "react-hot-toast": "^2.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^15.0.0",
+    "prettier": "^3.3.3"
+  }
+}
