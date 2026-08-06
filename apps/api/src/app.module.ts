@@ -6,6 +6,8 @@ import { EntitiesModule } from './modules/entities/entities.module';
 import { RelationsModule } from './modules/relations/relations.module';
 import { SourcesModule } from './modules/sources/sources.module';
 import { VerificationModule } from './modules/verification/verification.module';
+import { UsersModule } from './modules/users/users.module';
+import { RolesModule } from './modules/roles/roles.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { VerificationModule } from './modules/verification/verification.module';
     RelationsModule,
     SourcesModule,
     VerificationModule,
+    UsersModule,
+    RolesModule,
   ],
   controllers: [],
   providers: [],

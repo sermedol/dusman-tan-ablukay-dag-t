@@ -25,36 +25,105 @@ export default function VerificationPage() {
       return;
     }
 
-    // TODO: Fetch real pending items from API
-    setItems([
-      {
-        id: '1',
-        canonicalName: 'Demo Holding A',
-        summary: 'Test holding for demo purposes',
-        createdAt: new Date().toISOString(),
-        sourceCount: 1,
-        type: 'entity',
-      },
-      {
-        id: '2',
-        canonicalName: 'Demo Company B → Demo Holding A',
-        summary: 'Ownership relation',
-        createdAt: new Date().toISOString(),
-        sourceCount: 1,
-        type: 'relation',
-      },
-    ]);
-    setLoading(false);
+    fetchPendingItems();
   }, [router]);
 
+  const fetchPendingItems = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+
+      const [entitiesRes, relationsRes] = await Promise.all([
+        fetch('http://localhost:3001/api/v1/verification/entities/pending', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        fetch('http://localhost:3001/api/v1/verification/relations/pending', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+      ]);
+
+      if (!entitiesRes.ok || !relationsRes.ok) throw new Error('Failed to fetch pending items');
+
+      const entities = await entitiesRes.json();
+      const relations = await relationsRes.json();
+
+      const pendingItems: PendingItem[] = [
+        ...entities.map((e: any) => ({
+          id: e.id,
+          canonicalName: e.canonicalName,
+          summary: e.description || 'Açıklama yok',
+          createdAt: e.createdAt,
+          sourceCount: e.sourceEvidence?.length || 0,
+          type: 'entity' as const,
+        })),
+        ...relations.map((r: any) => ({
+          id: r.id,
+          canonicalName: `${r.sourceEntity?.canonicalName} → ${r.targetEntity?.canonicalName}`,
+          summary: r.description || 'Açıklama yok',
+          createdAt: r.createdAt,
+          sourceCount: r.sourceEvidence?.length || 0,
+          type: 'relation' as const,
+        })),
+      ];
+
+      setItems(pendingItems);
+    } catch (err) {
+      console.error('Error fetching pending items:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const handleApprove = async (id: string) => {
-    // TODO: Call API to approve
-    console.log('Approved:', id);
+    try {
+      const token = localStorage.getItem('token');
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+
+      const endpoint = item.type === 'entity'
+        ? `http://localhost:3001/api/v1/verification/entities/${id}/verify`
+        : `http://localhost:3001/api/v1/verification/relations/${id}/verify`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ approve: true }),
+      });
+
+      if (!response.ok) throw new Error('Failed to approve');
+      await fetchPendingItems();
+    } catch (err) {
+      console.error('Error approving:', err);
+    }
   };
 
   const handleReject = async (id: string) => {
-    // TODO: Call API to reject
-    console.log('Rejected:', id);
+    try {
+      const token = localStorage.getItem('token');
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+
+      const endpoint = item.type === 'entity'
+        ? `http://localhost:3001/api/v1/verification/entities/${id}/verify`
+        : `http://localhost:3001/api/v1/verification/relations/${id}/verify`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ approve: false }),
+      });
+
+      if (!response.ok) throw new Error('Failed to reject');
+      await fetchPendingItems();
+    } catch (err) {
+      console.error('Error rejecting:', err);
+    }
   };
 
   if (loading) {
