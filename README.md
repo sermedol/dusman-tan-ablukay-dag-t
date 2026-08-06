@@ -1,1 +1,1 @@
-# D-man-Tan-Ablukay-Da-t
+düşmanı tanı ablukayı dağıt
