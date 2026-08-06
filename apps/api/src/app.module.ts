@@ -8,6 +8,7 @@ import { SourcesModule } from './modules/sources/sources.module';
 import { VerificationModule } from './modules/verification/verification.module';
 import { UsersModule } from './modules/users/users.module';
 import { RolesModule } from './modules/roles/roles.module';
+import { ImportsModule } from './modules/imports/imports.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RolesModule } from './modules/roles/roles.module';
     VerificationModule,
     UsersModule,
     RolesModule,
+    ImportsModule,
   ],
   controllers: [],
   providers: [],
