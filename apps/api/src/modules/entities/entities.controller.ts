@@ -1,16 +1,34 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { EntitiesService } from './entities.service';
 import { CreateEntityDto, UpdateEntityDto } from './dto';
+import { CurrentUser } from '../../shared/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
+
+interface User {
+  userId: string;
+  email: string;
+  roles: string[];
+  permissions: string[];
+}
 
 @Controller('entities')
 export class EntitiesController {
   constructor(private entitiesService: EntitiesService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() dto: CreateEntityDto) {
-    // TODO: Add @CurrentUser() to extract userId from JWT
-    const userId = 'demo-user';
-    return this.entitiesService.create(dto, userId);
+  async create(@Body() dto: CreateEntityDto, @CurrentUser() user: User) {
+    return this.entitiesService.create(dto, user.userId);
   }
 
   @Get()
@@ -38,13 +56,17 @@ export class EntitiesController {
     return this.entitiesService.findById(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateEntityDto) {
-    // TODO: Add @CurrentUser() to extract userId from JWT
-    const userId = 'demo-user';
-    return this.entitiesService.update(id, dto, userId);
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateEntityDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.entitiesService.update(id, dto, user.userId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async delete(@Param('id') id: string) {
     return this.entitiesService.delete(id);
