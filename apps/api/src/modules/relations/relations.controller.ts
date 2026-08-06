@@ -50,6 +50,46 @@ export class RelationsController {
     });
   }
 
+  @Get('graph/stats')
+  async getStats() {
+    return this.relationsService.getStats();
+  }
+
+  @Get('graph/:entityId')
+  async getEntityGraph(
+    @Param('entityId') entityId: string,
+    @Query('depth') depth?: string,
+  ) {
+    return this.relationsService.getEntityGraph(entityId, depth ? parseInt(depth, 10) : 2);
+  }
+
+  @Get('related/:entityId')
+  async getRelatedEntities(
+    @Param('entityId') entityId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.relationsService.findRelatedEntities(entityId, limit ? parseInt(limit, 10) : 10);
+  }
+
+  @Get('common/:entity1/:entity2')
+  async getCommonConnections(
+    @Param('entity1') entity1: string,
+    @Param('entity2') entity2: string,
+  ) {
+    return this.relationsService.findCommonConnections(entity1, entity2);
+  }
+
+  @Get('pending-verification')
+  async getPendingVerification(
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
+  ) {
+    return this.relationsService.findPendingVerification(
+      skip ? parseInt(skip, 10) : 0,
+      take ? parseInt(take, 10) : 20,
+    );
+  }
+
   @Get(':id')
   async findById(@Param('id') id: string) {
     return this.relationsService.findById(id);
@@ -63,6 +103,15 @@ export class RelationsController {
     @CurrentUser() user: User,
   ) {
     return this.relationsService.update(id, dto, user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/verify')
+  async verify(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.relationsService.verifyRelation(id, user.userId);
   }
 
   @UseGuards(JwtAuthGuard)

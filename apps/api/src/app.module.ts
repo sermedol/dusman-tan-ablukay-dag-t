@@ -4,6 +4,7 @@ import { PrismaModule } from './shared/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { EntitiesModule } from './modules/entities/entities.module';
 import { RelationsModule } from './modules/relations/relations.module';
+import { TimelineModule } from './modules/timeline/timeline.module';
 import { SourcesModule } from './modules/sources/sources.module';
 import { VerificationModule } from './modules/verification/verification.module';
 import { UsersModule } from './modules/users/users.module';
@@ -19,6 +20,7 @@ import { StrugglesModule } from './modules/struggles/struggles.module';
     AuthModule,
     EntitiesModule,
     RelationsModule,
+    TimelineModule,
     SourcesModule,
     VerificationModule,
     UsersModule,
