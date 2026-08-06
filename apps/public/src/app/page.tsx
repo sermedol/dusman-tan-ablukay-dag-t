@@ -20,7 +20,7 @@ export default function Home() {
       <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e5e5', padding: '16px 20px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ fontSize: '20px', fontWeight: '700', margin: 0, color: '#1a1a1a' }}>
-            Umut-Sen Platform
+            Düşmanı Tanı Ablukayı Dağıt
           </h1>
           <div style={{ display: 'flex', gap: '24px' }}>
             <a href="/" style={{ color: '#1a1a1a', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>
@@ -50,10 +50,10 @@ export default function Home() {
         textAlign: 'center',
       }}>
         <h2 style={{ fontSize: '48px', fontWeight: '700', margin: '0 0 16px 0', color: '#1a1a1a', maxWidth: '700px' }}>
-          Türk Sermayesi, İşçi Mücadeləri ve Bağlantıları Keşfedin
+          Düşmanı Tanı, Ablukayı Dağıt
         </h2>
         <p style={{ fontSize: '18px', color: '#666', margin: '0 0 40px 0', maxWidth: '600px', lineHeight: '1.6' }}>
-          Kapital grupları, işçi direniş ve mahkeme davalarını araştırın. Gizli bağlantıları ortaya çıkarın.
+          Türkiye'de sermayenin gerçek yapısını, gücü nasıl örgütlendiğini ve direniş alanlarının nereye kadar uzandığını gösterir.
         </p>
 
         {/* Search Form */}
@@ -177,7 +177,7 @@ export default function Home() {
       <footer style={{ backgroundColor: '#2a2a2a', color: 'white', padding: '40px 20px', textAlign: 'center', fontSize: '14px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <p style={{ margin: '0 0 20px 0' }}>
-            Umut-Sen Platform © 2024. Halkın bilgilendirilmesi için.
+            Düşmanı Tanı Ablukayı Dağıt © 2024. Halkın bilgilendirilmesi için.
           </p>
           <div style={{ display: 'flex', gap: '24px', justifyContent: 'center' }}>
             <a href="#" style={{ color: '#aaa', textDecoration: 'none' }}>Gizlilik</a>
