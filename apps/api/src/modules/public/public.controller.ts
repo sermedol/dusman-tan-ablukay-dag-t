@@ -47,4 +47,27 @@ export class PublicController {
   async getLocations() {
     return this.publicService.getPublicLocations();
   }
+
+  @Get('struggles')
+  async getStruggles(@Query('limit') limit?: string) {
+    return this.publicService.getPublicStruggles(
+      limit ? parseInt(limit, 10) : 100,
+    );
+  }
+
+  @Get('struggles/type/:type')
+  async getStrugglesByType(
+    @Param('type') type: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.publicService.getPublicStrugglesByType(
+      type,
+      limit ? parseInt(limit, 10) : 50,
+    );
+  }
+
+  @Get('struggles/:id')
+  async getStruggleById(@Param('id') id: string) {
+    return this.publicService.getPublicStruggleById(id);
+  }
 }
