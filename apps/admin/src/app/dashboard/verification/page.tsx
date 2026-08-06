@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api-client';
 
 interface PendingItem {
   id: string;
@@ -17,6 +18,7 @@ export default function VerificationPage() {
   const [items, setItems] = useState<PendingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'entity' | 'relation'>('entity');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -31,24 +33,15 @@ export default function VerificationPage() {
   const fetchPendingItems = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      setError(null);
 
-      const [entitiesRes, relationsRes] = await Promise.all([
-        fetch('http://localhost:3001/api/v1/verification/entities/pending', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
-        fetch('http://localhost:3001/api/v1/verification/relations/pending', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
+      const [entities, relations] = await Promise.all([
+        apiClient.get('/verification/entities/pending').catch(() => []),
+        apiClient.get('/verification/relations/pending').catch(() => []),
       ]);
 
-      if (!entitiesRes.ok || !relationsRes.ok) throw new Error('Failed to fetch pending items');
-
-      const entities = await entitiesRes.json();
-      const relations = await relationsRes.json();
-
       const pendingItems: PendingItem[] = [
-        ...entities.map((e: any) => ({
+        ...((Array.isArray(entities) ? entities : []) as any[]).map((e: any) => ({
           id: e.id,
           canonicalName: e.canonicalName,
           summary: e.description || 'Açıklama yok',
@@ -56,7 +49,7 @@ export default function VerificationPage() {
           sourceCount: e.sourceEvidence?.length || 0,
           type: 'entity' as const,
         })),
-        ...relations.map((r: any) => ({
+        ...((Array.isArray(relations) ? relations : []) as any[]).map((r: any) => ({
           id: r.id,
           canonicalName: `${r.sourceEntity?.canonicalName} → ${r.targetEntity?.canonicalName}`,
           summary: r.description || 'Açıklama yok',
@@ -68,60 +61,46 @@ export default function VerificationPage() {
 
       setItems(pendingItems);
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Öğeleri yüklerken hata oluştu';
+      setError(message);
       console.error('Error fetching pending items:', err);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleApprove = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
       const item = items.find(i => i.id === id);
       if (!item) return;
 
       const endpoint = item.type === 'entity'
-        ? `http://localhost:3001/api/v1/verification/entities/${id}/verify`
-        : `http://localhost:3001/api/v1/verification/relations/${id}/verify`;
+        ? `/verification/entities/${id}/verify`
+        : `/verification/relations/${id}/verify`;
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ approve: true }),
-      });
-
-      if (!response.ok) throw new Error('Failed to approve');
+      await apiClient.post(endpoint, { approve: true });
       await fetchPendingItems();
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Onay hatası';
+      setError(message);
       console.error('Error approving:', err);
     }
   };
 
   const handleReject = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
       const item = items.find(i => i.id === id);
       if (!item) return;
 
       const endpoint = item.type === 'entity'
-        ? `http://localhost:3001/api/v1/verification/entities/${id}/verify`
-        : `http://localhost:3001/api/v1/verification/relations/${id}/verify`;
+        ? `/verification/entities/${id}/verify`
+        : `/verification/relations/${id}/verify`;
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ approve: false }),
-      });
-
-      if (!response.ok) throw new Error('Failed to reject');
+      await apiClient.post(endpoint, { approve: false });
       await fetchPendingItems();
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Reddetme hatası';
+      setError(message);
       console.error('Error rejecting:', err);
     }
   };
@@ -149,80 +128,85 @@ export default function VerificationPage() {
               fontSize: '14px',
             }}
           >
-            Panele Dön
+            ← Geri
           </button>
         </div>
       </header>
 
+      {/* Error Message */}
+      {error && (
+        <div style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '12px 20px', marginBottom: '20px' }}>
+          <strong>Hata:</strong> {error}
+        </div>
+      )}
+
       {/* Main Content */}
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
+      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '32px', borderBottom: '1px solid #e5e5e5' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid #e5e5e5' }}>
           <button
             onClick={() => setActiveTab('entity')}
             style={{
-              padding: '12px 24px',
-              backgroundColor: activeTab === 'entity' ? '#dc2626' : 'transparent',
-              color: activeTab === 'entity' ? 'white' : '#1a1a1a',
+              padding: '12px 16px',
               border: 'none',
+              borderBottom: activeTab === 'entity' ? '2px solid #dc2626' : '2px solid transparent',
               cursor: 'pointer',
               fontSize: '14px',
-              fontWeight: '500',
-              borderBottom: activeTab === 'entity' ? 'none' : '2px solid transparent',
+              fontWeight: activeTab === 'entity' ? '600' : '400',
+              color: activeTab === 'entity' ? '#dc2626' : '#666',
+              backgroundColor: 'transparent',
             }}
           >
-            Varlıklar ({items.filter((i) => i.type === 'entity').length})
+            Varlıklar ({items.filter(i => i.type === 'entity').length})
           </button>
           <button
             onClick={() => setActiveTab('relation')}
             style={{
-              padding: '12px 24px',
-              backgroundColor: activeTab === 'relation' ? '#dc2626' : 'transparent',
-              color: activeTab === 'relation' ? 'white' : '#1a1a1a',
+              padding: '12px 16px',
               border: 'none',
+              borderBottom: activeTab === 'relation' ? '2px solid #dc2626' : '2px solid transparent',
               cursor: 'pointer',
               fontSize: '14px',
-              fontWeight: '500',
-              borderBottom: activeTab === 'relation' ? 'none' : '2px solid transparent',
+              fontWeight: activeTab === 'relation' ? '600' : '400',
+              color: activeTab === 'relation' ? '#dc2626' : '#666',
+              backgroundColor: 'transparent',
             }}
           >
-            İlişkiler ({items.filter((i) => i.type === 'relation').length})
+            İlişkiler ({items.filter(i => i.type === 'relation').length})
           </button>
         </div>
 
         {/* Items List */}
         {filteredItems.length === 0 ? (
-          <div style={{ padding: '40px', textAlign: 'center', backgroundColor: 'white', borderRadius: '8px' }}>
-            <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
-              🎉 Tamamlandı! Doğrulanmayı bekleyen hiçbir öğe yok.
-            </p>
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#666' }}>
+            Doğrulanmaya beklenen {activeTab === 'entity' ? 'varlık' : 'ilişki'} yok.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {filteredItems.map((item) => (
               <div
                 key={item.id}
                 style={{
-                  padding: '20px',
                   backgroundColor: 'white',
-                  borderRadius: '8px',
                   border: '1px solid #e5e5e5',
-                  display: 'grid',
-                  gridTemplateColumns: '1fr auto',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
                   gap: '16px',
-                  alignItems: 'start',
                 }}
               >
-                <div>
-                  <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 8px 0' }}>
-                    {item.canonicalName || 'İlişki'}
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 4px 0' }}>
+                    {item.canonicalName}
                   </h3>
-                  <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#666' }}>
-                    {item.summary || 'Açıklama yok'}
+                  <p style={{ fontSize: '14px', color: '#666', margin: '4px 0' }}>
+                    {item.summary}
                   </p>
-                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#999' }}>
-                    <span>📅 {new Date(item.createdAt).toLocaleDateString('tr-TR')}</span>
-                    <span>📄 {item.sourceCount} kaynak</span>
+                  <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
+                    📅 {new Date(item.createdAt).toLocaleDateString('tr-TR')}
+                    {' • '}📎 {item.sourceCount} kaynak
                   </div>
                 </div>
 
@@ -234,9 +218,9 @@ export default function VerificationPage() {
                       backgroundColor: '#10b981',
                       color: 'white',
                       border: 'none',
-                      borderRadius: '6px',
+                      borderRadius: '4px',
                       cursor: 'pointer',
-                      fontSize: '13px',
+                      fontSize: '14px',
                       fontWeight: '500',
                     }}
                   >
@@ -249,9 +233,9 @@ export default function VerificationPage() {
                       backgroundColor: '#ef4444',
                       color: 'white',
                       border: 'none',
-                      borderRadius: '6px',
+                      borderRadius: '4px',
                       cursor: 'pointer',
-                      fontSize: '13px',
+                      fontSize: '14px',
                       fontWeight: '500',
                     }}
                   >
