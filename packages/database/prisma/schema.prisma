@@ -1,0 +1,655 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USERS & AUTH
+// ============================================================================
+
+model User {
+  id                      String    @id @default(cuid())
+  email                   String    @unique
+  username                String    @unique
+  passwordHash            String
+  fullName                String?
+  avatarUrl               String?
+  roleId                  String
+  role                    Role      @relation(fields: [roleId], references: [id])
+  status                  UserStatus @default(active)
+  twoFactorEnabled        Boolean   @default(false)
+  twoFactorSecret         String?
+  lastLoginAt             DateTime?
+  createdBy               String?
+  updatedBy               String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  version                 Int       @default(1)
+
+  entities                Entity[]            @relation("entityCreatedBy")
+  entitiesUpdated         Entity[]            @relation("entityUpdatedBy")
+  relations               Relation[]          @relation("relationCreatedBy")
+  relationsUpdated        Relation[]          @relation("relationUpdatedBy")
+  sources                 Source[]            @relation("sourceCreatedBy")
+  files                   File[]
+  revisions               Revision[]
+  auditEvents             AuditEvent[]
+  importBatches           ImportBatch[]
+
+  @@index([roleId])
+  @@index([status])
+}
+
+enum UserStatus {
+  active
+  inactive
+  suspended
+}
+
+model Role {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@index([code])
+}
+
+model RolePermission {
+  id        String @id @default(cuid())
+  roleId    String
+  role      Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission String
+
+  @@unique([roleId, permission])
+  @@index([roleId])
+}
+
+// ============================================================================
+// ENTITIES & TYPES
+// ============================================================================
+
+model EntityType {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  name            String
+  description     String?
+  icon            String?
+  colorToken      String?
+  singularName    String?
+  pluralName      String?
+  examples        String?
+  visibility      Visibility @default(public)
+  isSearchable    Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  entities        Entity[]
+
+  @@index([code])
+}
+
+model Entity {
+  id                      String    @id @default(cuid())
+  entityTypeId            String
+  entityType              EntityType @relation(fields: [entityTypeId], references: [id])
+  canonicalName           String
+  slug                    String    @unique
+  shortName               String?
+  description             String?
+  summary                 String?
+  status                  EntityStatus @default(active)
+  visibility              Visibility @default(draft)
+  verificationStatus      VerificationStatus @default(unverified)
+  primaryLocationId       String?
+  primaryLocation         Location? @relation(fields: [primaryLocationId], references: [id])
+  foundedAt               DateTime?
+  closedAt                DateTime?
+  activeFrom              DateTime?
+  activeUntil             DateTime?
+  websiteUrl              String?
+  logoFileId              String?
+  logoFile                File?     @relation("entityLogo", fields: [logoFileId], references: [id])
+  coverFileId             String?
+  coverFile               File?     @relation("entityCover", fields: [coverFileId], references: [id])
+  metadataJson            Json?
+  publishedRevisionId     String?
+  publishedAt             DateTime?
+  createdBy               String
+  createdByUser           User      @relation("entityCreatedBy", fields: [createdBy], references: [id])
+  updatedBy               String
+  updatedByUser           User      @relation("entityUpdatedBy", fields: [updatedBy], references: [id])
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  version                 Int       @default(1)
+
+  aliases                 EntityAlias[]
+  sourceEvidence          EntitySourceEvidence[]
+  relationsAsSource       Relation[]            @relation("relationSource")
+  relationsAsTarget       Relation[]            @relation("relationTarget")
+  locations               Location[]            @relation("entityLocations")
+  origins                 RecordOrigin[]
+  revisions               Revision[]            @relation("entityRevisions")
+  tags                    EntityTag[]
+
+  @@unique([entityTypeId, canonicalName])
+  @@index([slug])
+  @@index([entityTypeId])
+  @@index([visibility])
+  @@index([status])
+  @@index([publishedAt])
+}
+
+enum EntityStatus {
+  active
+  inactive
+  dissolved
+  defunct
+}
+
+model EntityAlias {
+  id          String    @id @default(cuid())
+  entityId    String
+  entity      Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  alias       String
+  aliasType   AliasType
+  validFrom   DateTime?
+  validUntil  DateTime?
+  language    String?   @default("tr")
+  sourceId    String?
+  source      Source?   @relation(fields: [sourceId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([entityId])
+  @@index([alias])
+  @@index([aliasType])
+}
+
+enum AliasType {
+  former_name
+  trade_name
+  abbreviation
+  common_name
+  legal_name
+  misspelling
+}
+
+// ============================================================================
+// RELATIONS & TYPES
+// ============================================================================
+
+model RelationType {
+  id                      String    @id @default(cuid())
+  code                    String    @unique
+  name                    String
+  inverseName             String?
+  category                String
+  description             String?
+  isDirected              Boolean   @default(true)
+  allowMultiple           Boolean   @default(true)
+  colorToken              String?
+  lineStyle               String?   @default("solid")
+  icon                    String?
+  sourceEntityTypeRules   Json?
+  targetEntityTypeRules   Json?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  relations               Relation[]
+
+  @@index([code])
+  @@index([category])
+}
+
+model Relation {
+  id                      String    @id @default(cuid())
+  relationTypeId          String
+  relationType            RelationType @relation(fields: [relationTypeId], references: [id])
+  sourceEntityId          String
+  sourceEntity            Entity    @relation("relationSource", fields: [sourceEntityId], references: [id])
+  targetEntityId          String
+  targetEntity            Entity    @relation("relationTarget", fields: [targetEntityId], references: [id])
+  direction               String    @default("forward")
+  summary                 String?
+  description             String?
+  status                  EntityStatus @default(active)
+  visibility              Visibility @default(draft)
+  verificationStatus      VerificationStatus @default(unverified)
+  confidenceLevel         ConfidenceLevel @default(medium)
+  validFrom               DateTime?
+  validUntil              DateTime?
+  observedAt              DateTime?
+  publishedRevisionId     String?
+  publishedAt             DateTime?
+  createdBy               String
+  createdByUser           User      @relation("relationCreatedBy", fields: [createdBy], references: [id])
+  updatedBy               String
+  updatedByUser           User      @relation("relationUpdatedBy", fields: [updatedBy], references: [id])
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  version                 Int       @default(1)
+
+  sourceEvidence          RelationSourceEvidence[]
+  origins                 RecordOrigin[]
+  revisions               Revision[]            @relation("relationRevisions")
+
+  @@unique([sourceEntityId, targetEntityId, relationTypeId])
+  @@index([sourceEntityId])
+  @@index([targetEntityId])
+  @@index([relationTypeId])
+  @@index([visibility])
+  @@index([publishedAt])
+  @@check("sourceEntityId != targetEntityId")
+}
+
+enum ConfidenceLevel {
+  high
+  medium
+  low
+  unverified
+}
+
+// ============================================================================
+// SOURCES & EVIDENCE
+// ============================================================================
+
+model SourceType {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+
+  sources     Source[]
+}
+
+model Source {
+  id                      String    @id @default(cuid())
+  sourceTypeId            String
+  sourceType              SourceType @relation(fields: [sourceTypeId], references: [id])
+  title                   String
+  publisher               String?
+  author                  String?
+  publicationDate         DateTime?
+  accessedAt              DateTime?
+  originalUrl             String?
+  archivedUrl             String?
+  fileId                  String?
+  file                    File?     @relation(fields: [fileId], references: [id])
+  language                String?   @default("tr")
+  pageReference           String?
+  quoteExcerpt            String?
+  notes                   String?
+  reliabilityLevel        ReliabilityLevel @default(secondary)
+  verificationStatus      VerificationStatus @default(unverified)
+  checksum                String?
+  metadataJson            Json?
+  createdBy               String
+  createdByUser           User      @relation("sourceCreatedBy", fields: [createdBy], references: [id])
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  version                 Int       @default(1)
+
+  entityEvidence          EntitySourceEvidence[]
+  relationEvidence        RelationSourceEvidence[]
+  aliases                 EntityAlias[]
+  locations               Location[]
+  origins                 RecordOrigin[]
+
+  @@index([sourceTypeId])
+  @@index([checksum])
+  @@index([verificationStatus])
+}
+
+enum ReliabilityLevel {
+  primary
+  secondary
+  tertiary
+  unreliable
+}
+
+model EntitySourceEvidence {
+  id              String    @id @default(cuid())
+  entityId        String
+  entity          Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  sourceId        String
+  source          Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  evidenceType    String
+  excerpt         String?
+  pageNumber      Int?
+  supportsFrom    DateTime?
+  supportsUntil   DateTime?
+  notes           String?
+  createdAt       DateTime  @default(now())
+
+  @@unique([entityId, sourceId, evidenceType])
+  @@index([entityId])
+  @@index([sourceId])
+}
+
+model RelationSourceEvidence {
+  id            String    @id @default(cuid())
+  relationId    String
+  relation      Relation  @relation(fields: [relationId], references: [id], onDelete: Cascade)
+  sourceId      String
+  source        Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  excerpt       String?
+  pageNumber    Int?
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  @@unique([relationId, sourceId])
+  @@index([relationId])
+  @@index([sourceId])
+}
+
+// ============================================================================
+// LOCATIONS
+// ============================================================================
+
+model Location {
+  id              String    @id @default(cuid())
+  name            String
+  locationType    LocationType
+  countryCode     String?   @default("TR")
+  province        String?
+  district        String?
+  neighborhood    String?
+  address         String?
+  latitude        Decimal?  @db.Decimal(10, 8)
+  longitude       Decimal?  @db.Decimal(11, 8)
+  accuracyLevel   AccuracyLevel @default(unknown)
+  sourceId        String?
+  source          Source?   @relation(fields: [sourceId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  entities        Entity[]            @relation("entityLocations")
+
+  @@index([province])
+  @@index([district])
+}
+
+enum LocationType {
+  exact
+  approximate
+  district
+  province
+  country
+  region
+}
+
+enum AccuracyLevel {
+  exact
+  approximate
+  district
+  province
+  unknown
+}
+
+// ============================================================================
+// FILES
+// ============================================================================
+
+model File {
+  id              String    @id @default(cuid())
+  objectKey       String    @unique
+  fileName        String
+  mimeType        String
+  sizeBytes       Int
+  checksum        String?
+  uploadedBy      String
+  uploadedByUser  User      @relation(fields: [uploadedBy], references: [id])
+  accessLevel     AccessLevel @default(internal)
+  expiryDate      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  sources         Source[]
+  entityLogos     Entity[]  @relation("entityLogo")
+  entityCovers    Entity[]  @relation("entityCover")
+
+  @@index([uploadedBy])
+  @@index([accessLevel])
+  @@index([checksum])
+}
+
+enum AccessLevel {
+  public
+  internal
+  private
+}
+
+// ============================================================================
+// REVISIONS & AUDIT
+// ============================================================================
+
+model Revision {
+  id              String    @id @default(cuid())
+  resourceType    String
+  resourceId      String
+  revisionNumber  Int
+  snapshotJson    Json
+  changeSummary   String?
+  changeReason    String?
+  createdBy       String
+  createdByUser   User      @relation(fields: [createdBy], references: [id])
+  createdAt       DateTime  @default(now())
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewStatus    ReviewStatus @default(pending)
+
+  entity          Entity?   @relation("entityRevisions", fields: [resourceId], references: [id], onDelete: SetNull)
+  relation        Relation? @relation("relationRevisions", fields: [resourceId], references: [id], onDelete: SetNull)
+
+  @@unique([resourceType, resourceId, revisionNumber])
+  @@index([resourceId])
+  @@index([resourceType])
+  @@index([reviewStatus])
+}
+
+enum ReviewStatus {
+  pending
+  approved
+  rejected
+}
+
+model AuditEvent {
+  id            String    @id @default(cuid())
+  actorId       String
+  actor         User      @relation(fields: [actorId], references: [id])
+  action        String
+  resourceType  String
+  resourceId    String?
+  requestId     String?
+  ipHash        String?
+  userAgent     String?
+  beforeJson    Json?
+  afterJson     Json?
+  createdAt     DateTime  @default(now())
+
+  @@index([actorId])
+  @@index([resourceType])
+  @@index([resourceId])
+  @@index([action])
+}
+
+// ============================================================================
+// IMPORT & DATA LINEAGE
+// ============================================================================
+
+model ImportBatch {
+  id              String    @id @default(cuid())
+  originType      ImportOriginType
+  originFileId    String?
+  driveFileId     String?
+  fileName        String
+  fileChecksum    String?
+  templateType    String
+  templateVersion String?
+  uploadedBy      String?
+  uploadedByUser  User?     @relation(fields: [uploadedBy], references: [id])
+  status          ImportStatus
+  startedAt       DateTime?
+  completedAt     DateTime?
+  rowCount        Int?
+  validRowCount   Int?
+  invalidRowCount Int?
+  warningCount    Int?
+  errorMessage    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  rows            ImportRow[]
+  origins         RecordOrigin[]
+
+  @@index([originType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum ImportOriginType {
+  admin_upload
+  google_drive
+  api
+  manual
+}
+
+enum ImportStatus {
+  pending
+  processing
+  preview_ready
+  approved
+  importing
+  completed
+  failed
+}
+
+model ImportRow {
+  id                String    @id @default(cuid())
+  importBatchId     String
+  importBatch       ImportBatch @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  sheetName         String?
+  rowNumber         Int
+  rawJson           Json
+  normalizedJson    Json?
+  status            ImportRowStatus
+  errorJson         Json?
+  warningJson       Json?
+  matchedResourceId String?
+  externalId        String?
+  createdAt         DateTime  @default(now())
+
+  @@index([importBatchId])
+  @@index([status])
+  @@index([externalId])
+}
+
+enum ImportRowStatus {
+  pending
+  valid
+  has_warnings
+  invalid
+  duplicate
+  matched
+  imported
+}
+
+model RecordOrigin {
+  id              String    @id @default(cuid())
+  resourceType    String
+  resourceId      String
+  originType      ImportOriginType
+  originReference String?
+  importBatchId   String?
+  importBatch     ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+  driveFileId     String?
+  sheetName       String?
+  rowNumber       Int?
+  firstImportedAt DateTime  @default(now())
+  lastSyncedAt    DateTime?
+
+  entity          Entity?   @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  relation        Relation? @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  source          Source?   @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceType, resourceId, originType, originReference])
+  @@index([resourceId])
+  @@index([importBatchId])
+}
+
+// ============================================================================
+// TAXONOMY
+// ============================================================================
+
+model TaxonomyCategory {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  name        String
+  parentId    String?
+  parent      TaxonomyCategory? @relation("taxonomyHierarchy", fields: [parentId], references: [id])
+  type        String
+  createdAt   DateTime  @default(now())
+
+  children    TaxonomyCategory[] @relation("taxonomyHierarchy")
+  values      TaxonomyValue[]
+
+  @@index([type])
+}
+
+model TaxonomyValue {
+  id          String    @id @default(cuid())
+  categoryId  String
+  category    TaxonomyCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  value       String
+  label       String
+  description String?
+  sortOrder   Int?
+  createdAt   DateTime  @default(now())
+
+  tags        EntityTag[]
+
+  @@index([categoryId])
+}
+
+model EntityTag {
+  id                  String    @id @default(cuid())
+  entityId            String
+  entity              Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  taxonomyValueId     String
+  taxonomyValue       TaxonomyValue @relation(fields: [taxonomyValueId], references: [id], onDelete: Cascade)
+  createdAt           DateTime  @default(now())
+
+  @@unique([entityId, taxonomyValueId])
+  @@index([entityId])
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Visibility {
+  public
+  internal
+  private
+}
+
+enum VerificationStatus {
+  unverified
+  verified
+  needs_review
+  source_required
+}

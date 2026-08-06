@@ -1,0 +1,22 @@
+{
+  "name": "@umutsensen/database",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "seed": "node --loader tsx src/seed.ts",
+    "reset": "prisma migrate reset --force",
+    "generate": "prisma generate",
+    "format": "prettier --write src"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "prisma": "^5.18.0",
+    "tsx": "^4.17.0"
+  }
+}
