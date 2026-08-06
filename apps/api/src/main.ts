@@ -2,6 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { createRateLimitMiddleware } from './shared/middleware/rate-limit.middleware';
+import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
+import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
+import { ApiResponseInterceptor } from './shared/interceptors/api-response.interceptor';
 
 const logger = new Logger('NestApplication');
 
@@ -70,6 +73,13 @@ async function bootstrap() {
 
     next();
   });
+
+  // Global exception filters (most specific first)
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Global response interceptor
+  app.useGlobalInterceptors(new ApiResponseInterceptor());
 
   // Global validation pipe
   app.useGlobalPipes(
