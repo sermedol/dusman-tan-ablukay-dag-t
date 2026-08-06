@@ -42,4 +42,9 @@ export class PublicController {
       limit ? parseInt(limit, 10) : 100,
     );
   }
+
+  @Get('locations')
+  async getLocations() {
+    return this.publicService.getPublicLocations();
+  }
 }

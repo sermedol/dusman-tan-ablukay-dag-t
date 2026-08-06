@@ -122,4 +122,17 @@ export class PublicService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async getPublicLocations() {
+    return this.prisma.location.findMany({
+      include: {
+        entities: {
+          include: {
+            entity: true,
+          },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+  }
 }
