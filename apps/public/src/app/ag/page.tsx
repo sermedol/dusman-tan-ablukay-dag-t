@@ -1,12 +1,30 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+
+interface Entity {
+  id: string;
+  canonicalName: string;
+}
+
+interface Relation {
+  id: string;
+  sourceEntity: Entity;
+  targetEntity: Entity;
+  relationType?: { name: string };
+}
+
+const GraphComponent = dynamic(
+  () => import('../../components/GraphComponent'),
+  { ssr: false, loading: () => <div style={{ width: '100%', height: '100%', backgroundColor: '#e5e5e5' }} /> }
+);
 
 export default function AgPage() {
-  const graphContainer = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
-  const [relations, setRelations] = useState<any[]>([]);
+  const [relations, setRelations] = useState<Relation[]>([]);
   const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
+  const [stats, setStats] = useState({ relations: 0, entities: 0 });
 
   useEffect(() => {
     const initGraph = async () => {
@@ -16,51 +34,18 @@ export default function AgPage() {
         if (response.ok) {
           const data = await response.json();
           setRelations(data);
-        }
 
-        // In production, Sigma.js would be loaded here for graph visualization
-        // For now, showing a placeholder with network statistics
-        if (graphContainer.current) {
-          graphContainer.current.innerHTML = `
-            <div style="
-              width: 100%;
-              height: 100%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: #f9f8f6;
-              font-size: 18px;
-              color: #666;
-            ">
-              <div style="text-align: center; padding: 40px;">
-                <h2 style="font-size: 28px; margin-bottom: 12px; color: #1a1a1a;">İlişki Ağı</h2>
-                <p style="font-size: 16px; margin-bottom: 24px;">Sigma.js ile varlık ilişkilerinin grafiksel gösterimi</p>
-                <div style="
-                  background: white;
-                  padding: 24px;
-                  border-radius: 8px;
-                  border: 1px solid #e5e5e5;
-                  margin-bottom: 24px;
-                  text-align: left;
-                  max-width: 400px;
-                  margin-left: auto;
-                  margin-right: auto;
-                ">
-                  <div style="margin-bottom: 16px;">
-                    <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 4px;">Ağ İstatistikleri</div>
-                    <div style="font-size: 14px; color: #666;">
-                      <div>• Toplam İlişkiler: ${relations.length || '...'}</div>
-                      <div>• Benzersiz Varlıklar: ${relations.length > 0 ? Math.ceil(relations.length * 1.5) : '...'}</div>
-                      <div>• Ortalama Derecesi: ${relations.length > 0 ? '3.2' : '...'}</div>
-                    </div>
-                  </div>
-                </div>
-                <p style="font-size: 12px; color: #999;">
-                  Grafik gösterimi geliştiriliyor...
-                </p>
-              </div>
-            </div>
-          `;
+          // Calculate statistics
+          const entities = new Set<string>();
+          data.forEach((rel: Relation) => {
+            entities.add(rel.sourceEntity.id);
+            entities.add(rel.targetEntity.id);
+          });
+
+          setStats({
+            relations: data.length,
+            entities: entities.size,
+          });
         }
 
         setLoading(false);
@@ -74,9 +59,9 @@ export default function AgPage() {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9f8f6' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f9f8f6', display: 'flex', flexDirection: 'column' }}>
       {/* Navigation */}
-      <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e5e5', padding: '16px 20px', position: 'relative', zIndex: 10 }}>
+      <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e5e5', padding: '16px 20px', position: 'relative', zIndex: 20 }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <a href="/" style={{ fontSize: '20px', fontWeight: '700', textDecoration: 'none', color: '#1a1a1a' }}>
             Umut-Sen
@@ -90,36 +75,93 @@ export default function AgPage() {
       </nav>
 
       {/* Graph Container */}
-      <div
-        ref={graphContainer}
-        style={{
-          width: '100%',
-          height: 'calc(100vh - 70px)',
-          backgroundColor: '#e5e5e5',
-        }}
-      />
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        {loading ? (
+          <div style={{ width: '100%', height: '100%', backgroundColor: '#e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <p style={{ color: '#666' }}>Ağ yükleniyor...</p>
+          </div>
+        ) : relations.length === 0 ? (
+          <div style={{ width: '100%', height: '100%', backgroundColor: '#e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ textAlign: 'center', background: 'white', padding: '40px', borderRadius: '8px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px' }}>İlişki Veri Yok</h2>
+              <p style={{ color: '#666', margin: 0 }}>Gösterilecek ilişki bulunmamaktadır.</p>
+            </div>
+          </div>
+        ) : (
+          <GraphComponent relations={relations} onNodeSelect={setSelectedEntity} />
+        )}
 
-      {/* Info Panel */}
-      {selectedEntity && (
+        {/* Stats Panel */}
         <div style={{
           position: 'absolute',
-          bottom: '20px',
-          right: '20px',
+          top: '20px',
+          left: '20px',
           background: 'white',
           padding: '16px',
           borderRadius: '8px',
           border: '1px solid #e5e5e5',
-          maxWidth: '300px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          zIndex: 30,
         }}>
-          <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
-            Seçilmiş Varlık
+          <div style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a1a', marginBottom: '12px' }}>
+            Ağ İstatistikleri
           </div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
-            {selectedEntity}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: '#dc2626' }}>
+                {stats.entities}
+              </div>
+              <div style={{ fontSize: '11px', color: '#999' }}>Varlık</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: '#dc2626' }}>
+                {stats.relations}
+              </div>
+              <div style={{ fontSize: '11px', color: '#999' }}>İlişki</div>
+            </div>
           </div>
         </div>
-      )}
+
+        {/* Selected Entity Panel */}
+        {selectedEntity && (
+          <div style={{
+            position: 'absolute',
+            bottom: '20px',
+            right: '20px',
+            background: 'white',
+            padding: '16px',
+            borderRadius: '8px',
+            border: '1px solid #e5e5e5',
+            maxWidth: '300px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            zIndex: 30,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a1a', marginBottom: '8px' }}>
+                  Seçilmiş Varlık
+                </div>
+                <div style={{ fontSize: '14px', color: '#666' }}>
+                  {selectedEntity}
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedEntity(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  padding: 0,
+                  color: '#999',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
