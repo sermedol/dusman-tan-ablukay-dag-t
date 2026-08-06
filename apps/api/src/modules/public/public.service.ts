@@ -1,0 +1,125 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../shared/prisma/prisma.service';
+
+@Injectable()
+export class PublicService {
+  constructor(private prisma: PrismaService) {}
+
+  async search(query: string, limit?: number) {
+    const take = limit || 20;
+    const searchQuery = `%${query.toLowerCase()}%`;
+
+    const [entities, relations, sources] = await Promise.all([
+      this.prisma.entity.findMany({
+        where: {
+          OR: [
+            { canonicalName: { contains: query, mode: 'insensitive' } },
+            { description: { contains: query, mode: 'insensitive' } },
+          ],
+          visibility: 'public',
+        },
+        include: { entityType: true },
+        take,
+      }),
+      this.prisma.relation.findMany({
+        where: {
+          visibility: 'public',
+        },
+        include: {
+          relationType: true,
+          sourceEntity: true,
+          targetEntity: true,
+        },
+        take,
+      }),
+      this.prisma.source.findMany({
+        where: {
+          OR: [
+            { title: { contains: query, mode: 'insensitive' } },
+            { content: { contains: query, mode: 'insensitive' } },
+          ],
+        },
+        include: { sourceType: true },
+        take,
+      }),
+    ]);
+
+    const results = [
+      ...entities.map((e) => ({
+        id: e.id,
+        type: 'entity' as const,
+        title: e.canonicalName,
+        description: e.description,
+        metadata: { entityType: e.entityType?.name },
+      })),
+      ...relations.map((r) => ({
+        id: r.id,
+        type: 'relation' as const,
+        title: `${r.sourceEntity?.canonicalName} → ${r.targetEntity?.canonicalName}`,
+        description: r.relationType?.name,
+        metadata: {},
+      })),
+      ...sources.map((s) => ({
+        id: s.id,
+        type: 'source' as const,
+        title: s.title,
+        description: s.content?.substring(0, 100),
+        metadata: { sourceType: s.sourceType?.name, url: s.url },
+      })),
+    ];
+
+    return results.slice(0, take);
+  }
+
+  async getPublicEntity(id: string) {
+    return this.prisma.entity.findUnique({
+      where: { id },
+      include: {
+        entityType: true,
+        sourceEvidence: {
+          include: {
+            source: true,
+          },
+          where: { source: { not: undefined } },
+        },
+      },
+    });
+  }
+
+  async getPublicRelations(entityId?: string, limit?: number) {
+    const take = limit || 100;
+
+    return this.prisma.relation.findMany({
+      where: {
+        visibility: 'public',
+        OR: entityId
+          ? [
+              { sourceEntityId: entityId },
+              { targetEntityId: entityId },
+            ]
+          : undefined,
+      },
+      include: {
+        relationType: true,
+        sourceEntity: true,
+        targetEntity: true,
+        sourceEvidence: {
+          include: { source: true },
+        },
+      },
+      take,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getPublicEntities(limit?: number) {
+    const take = limit || 100;
+
+    return this.prisma.entity.findMany({
+      where: { visibility: 'public' },
+      include: { entityType: true },
+      take,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+}

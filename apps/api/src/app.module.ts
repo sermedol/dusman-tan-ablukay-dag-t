@@ -9,6 +9,7 @@ import { VerificationModule } from './modules/verification/verification.module';
 import { UsersModule } from './modules/users/users.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { ImportsModule } from './modules/imports/imports.module';
+import { PublicModule } from './modules/public/public.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ImportsModule } from './modules/imports/imports.module';
     UsersModule,
     RolesModule,
     ImportsModule,
+    PublicModule,
   ],
   controllers: [],
   providers: [],
