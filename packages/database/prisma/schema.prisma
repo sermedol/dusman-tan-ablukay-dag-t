@@ -38,6 +38,8 @@ model User {
   relations               Relation[]          @relation("relationCreatedBy")
   relationsUpdated        Relation[]          @relation("relationUpdatedBy")
   sources                 Source[]            @relation("sourceCreatedBy")
+  struggles               Struggle[]          @relation("struggleCreatedBy")
+  strugglesUpdated        Struggle[]          @relation("struggleUpdatedBy")
   files                   File[]
   revisions               Revision[]
   auditEvents             AuditEvent[]
@@ -305,6 +307,7 @@ model Source {
 
   entityEvidence          EntitySourceEvidence[]
   relationEvidence        RelationSourceEvidence[]
+  struggleEvidence        StruggleSourceEvidence[]
   aliases                 EntityAlias[]
   locations               Location[]
   origins                 RecordOrigin[]
@@ -638,6 +641,96 @@ model EntityTag {
 }
 
 // ============================================================================
+// STRUGGLE & RESISTANCE
+// ============================================================================
+
+model Struggle {
+  id                      String    @id @default(cuid())
+  title                   String
+  slug                    String    @unique
+  description             String?
+  summary                 String?
+  type                    StruggleType
+  status                  StruggleStatus @default(active)
+  visibility              Visibility @default(draft)
+  verificationStatus      VerificationStatus @default(unverified)
+  startDate               DateTime?
+  endDate                 DateTime?
+  location                String?
+  latitude                Decimal?  @db.Decimal(10, 8)
+  longitude               Decimal?  @db.Decimal(11, 8)
+  participants            String?
+  outcome                 String?
+  lessons                 String?
+  relatedEntities         String?   // JSON array of entity IDs
+  publicationDate         DateTime?
+  publishedAt             DateTime?
+  createdBy               String
+  createdByUser           User      @relation("struggleCreatedBy", fields: [createdBy], references: [id])
+  updatedBy               String
+  updatedByUser           User      @relation("struggleUpdatedBy", fields: [updatedBy], references: [id])
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  version                 Int       @default(1)
+
+  sourceEvidence          StruggleSourceEvidence[]
+  tags                    StruggleTag[]
+
+  @@index([type])
+  @@index([status])
+  @@index([visibility])
+  @@index([slug])
+}
+
+enum StruggleType {
+  worker_resistance
+  union_pressure
+  wage_theft
+  workplace_death
+  forced_expropriation
+  mining_project
+  energy_project
+  ecological_battle
+  land_struggle
+  other
+}
+
+enum StruggleStatus {
+  active
+  completed
+  ongoing
+  historical
+}
+
+model StruggleSourceEvidence {
+  id              String    @id @default(cuid())
+  struggleId      String
+  struggle        Struggle  @relation(fields: [struggleId], references: [id], onDelete: Cascade)
+  sourceId        String
+  source          Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  excerpt         String?
+  pageNumber      Int?
+  notes           String?
+  createdAt       DateTime  @default(now())
+
+  @@unique([struggleId, sourceId])
+  @@index([struggleId])
+  @@index([sourceId])
+}
+
+model StruggleTag {
+  id              String    @id @default(cuid())
+  struggleId      String
+  struggle        Struggle  @relation(fields: [struggleId], references: [id], onDelete: Cascade)
+  tag             String
+  createdAt       DateTime  @default(now())
+
+  @@unique([struggleId, tag])
+  @@index([struggleId])
+  @@index([tag])
+}
+
+// ============================================================================
 // ENUMS
 // ============================================================================
 
@@ -652,4 +745,5 @@ enum VerificationStatus {
   verified
   needs_review
   source_required
+  conflicting
 }

@@ -135,4 +135,46 @@ export class PublicService {
       orderBy: { name: 'asc' },
     });
   }
+
+  async getPublicStruggles(limit?: number) {
+    const take = limit || 100;
+
+    return this.prisma.struggle.findMany({
+      where: { visibility: 'public' },
+      include: {
+        sourceEvidence: { include: { source: true } },
+        tags: true,
+      },
+      take,
+      orderBy: { startDate: 'desc' },
+    });
+  }
+
+  async getPublicStrugglesByType(type: string, limit?: number) {
+    const take = limit || 50;
+
+    return this.prisma.struggle.findMany({
+      where: {
+        visibility: 'public',
+        type: type as any,
+      },
+      include: {
+        sourceEvidence: { include: { source: true } },
+        tags: true,
+      },
+      take,
+      orderBy: { startDate: 'desc' },
+    });
+  }
+
+  async getPublicStruggleById(id: string) {
+    return this.prisma.struggle.findUnique({
+      where: { id },
+      include: {
+        createdByUser: { select: { fullName: true } },
+        sourceEvidence: { include: { source: true } },
+        tags: true,
+      },
+    });
+  }
 }

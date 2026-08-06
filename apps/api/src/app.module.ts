@@ -10,6 +10,7 @@ import { UsersModule } from './modules/users/users.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { ImportsModule } from './modules/imports/imports.module';
 import { PublicModule } from './modules/public/public.module';
+import { StrugglesModule } from './modules/struggles/struggles.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { PublicModule } from './modules/public/public.module';
     RolesModule,
     ImportsModule,
     PublicModule,
+    StrugglesModule,
   ],
   controllers: [],
   providers: [],
