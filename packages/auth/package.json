@@ -9,7 +9,7 @@
     "format": "prettier --write src"
   },
   "dependencies": {
-    "jsonwebtoken": "^9.1.2",
+    "jsonwebtoken": "^9.0.3",
     "bcryptjs": "^2.4.3"
   },
   "devDependencies": {

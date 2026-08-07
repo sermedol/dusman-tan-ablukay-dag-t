@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { MeiliSearch } from 'meilisearch';
 
 export interface SearchResult<T> {
   hits: T[];
@@ -29,7 +30,7 @@ export interface IndexSettings {
 @Injectable()
 export class MeilisearchService {
   private readonly logger = new Logger('MeilisearchService');
-  private client: any = null;
+  private client: MeiliSearch | null = null;
   private enabled: boolean = false;
   private indexes = new Map<string, IndexSettings>();
 
@@ -48,9 +49,10 @@ export class MeilisearchService {
     }
 
     try {
-      // @meilisearch/sdk will be installed in production
-      // const { MeiliSearch } = require('@meilisearch/sdk');
-      // this.client = new MeiliSearch({ host: meilisearchUrl, apiKey: meilisearchApiKey });
+      this.client = new MeiliSearch({
+        host: meilisearchUrl,
+        apiKey: meilisearchApiKey,
+      });
       this.logger.log(`Meilisearch configured: ${meilisearchUrl}`);
       this.enabled = true;
     } catch (error) {
@@ -101,18 +103,17 @@ export class MeilisearchService {
   async searchEntities<T extends { id: string }>(
     options: SearchOptions
   ): Promise<SearchResult<T>> {
-    if (!this.enabled) return this.getMockResults<T>(options);
+    if (!this.enabled || !this.client) return this.getMockResults<T>(options);
 
     try {
-      // const index = this.client.index('entities');
-      // const results = await index.search(options.q, {
-      //   limit: options.limit || 10,
-      //   offset: options.offset || 0,
-      //   filter: options.filter,
-      //   sort: options.sort,
-      // });
-      // return results;
-      return this.getMockResults<T>(options);
+      const index = this.client.index('entities');
+      const results = await index.search(options.q, {
+        limit: options.limit || 10,
+        offset: options.offset || 0,
+        filter: options.filter,
+        sort: options.sort,
+      });
+      return results as SearchResult<T>;
     } catch (error) {
       this.logger.error('Search failed', error);
       return this.getMockResults<T>(options);
@@ -122,12 +123,17 @@ export class MeilisearchService {
   async searchRelations<T extends { id: string }>(
     options: SearchOptions
   ): Promise<SearchResult<T>> {
-    if (!this.enabled) return this.getMockResults<T>(options);
+    if (!this.enabled || !this.client) return this.getMockResults<T>(options);
 
     try {
-      // const index = this.client.index('relations');
-      // return await index.search(options.q, options);
-      return this.getMockResults<T>(options);
+      const index = this.client.index('relations');
+      const results = await index.search(options.q, {
+        limit: options.limit || 10,
+        offset: options.offset || 0,
+        filter: options.filter,
+        sort: options.sort,
+      });
+      return results as SearchResult<T>;
     } catch (error) {
       this.logger.error('Relation search failed', error);
       return this.getMockResults<T>(options);
@@ -137,12 +143,17 @@ export class MeilisearchService {
   async searchTimeline<T extends { id: string }>(
     options: SearchOptions
   ): Promise<SearchResult<T>> {
-    if (!this.enabled) return this.getMockResults<T>(options);
+    if (!this.enabled || !this.client) return this.getMockResults<T>(options);
 
     try {
-      // const index = this.client.index('timeline');
-      // return await index.search(options.q, options);
-      return this.getMockResults<T>(options);
+      const index = this.client.index('timeline');
+      const results = await index.search(options.q, {
+        limit: options.limit || 10,
+        offset: options.offset || 0,
+        filter: options.filter,
+        sort: options.sort,
+      });
+      return results as SearchResult<T>;
     } catch (error) {
       this.logger.error('Timeline search failed', error);
       return this.getMockResults<T>(options);
@@ -150,14 +161,14 @@ export class MeilisearchService {
   }
 
   async indexEntity(id: string, data: Record<string, any>): Promise<void> {
-    if (!this.enabled) {
+    if (!this.enabled || !this.client) {
       this.logger.debug(`Entity ${id} indexed (mock)`);
       return;
     }
 
     try {
-      // const index = this.client.index('entities');
-      // await index.addDocuments([{ id, ...data }]);
+      const index = this.client.index('entities');
+      await index.addDocuments([{ id, ...data }]);
       this.logger.debug(`Entity ${id} indexed`);
     } catch (error) {
       this.logger.error(`Failed to index entity ${id}`, error);
@@ -165,55 +176,55 @@ export class MeilisearchService {
   }
 
   async indexRelation(id: string, data: Record<string, any>): Promise<void> {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.client) return;
 
     try {
-      // const index = this.client.index('relations');
-      // await index.addDocuments([{ id, ...data }]);
+      const index = this.client.index('relations');
+      await index.addDocuments([{ id, ...data }]);
     } catch (error) {
       this.logger.error(`Failed to index relation ${id}`, error);
     }
   }
 
   async indexTimelineEvent(id: string, data: Record<string, any>): Promise<void> {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.client) return;
 
     try {
-      // const index = this.client.index('timeline');
-      // await index.addDocuments([{ id, ...data }]);
+      const index = this.client.index('timeline');
+      await index.addDocuments([{ id, ...data }]);
     } catch (error) {
       this.logger.error(`Failed to index timeline event ${id}`, error);
     }
   }
 
   async removeEntity(id: string): Promise<void> {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.client) return;
 
     try {
-      // const index = this.client.index('entities');
-      // await index.deleteDocument(id);
+      const index = this.client.index('entities');
+      await index.deleteDocument(id);
     } catch (error) {
       this.logger.error(`Failed to remove entity ${id}`, error);
     }
   }
 
   async removeRelation(id: string): Promise<void> {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.client) return;
 
     try {
-      // const index = this.client.index('relations');
-      // await index.deleteDocument(id);
+      const index = this.client.index('relations');
+      await index.deleteDocument(id);
     } catch (error) {
       this.logger.error(`Failed to remove relation ${id}`, error);
     }
   }
 
   async removeTimelineEvent(id: string): Promise<void> {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.client) return;
 
     try {
-      // const index = this.client.index('timeline');
-      // await index.deleteDocument(id);
+      const index = this.client.index('timeline');
+      await index.deleteDocument(id);
     } catch (error) {
       this.logger.error(`Failed to remove timeline event ${id}`, error);
     }
@@ -225,13 +236,13 @@ export class MeilisearchService {
   }
 
   async clearIndexes(): Promise<void> {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.client) return;
 
     try {
-      // for (const indexName of this.indexes.keys()) {
-      //   const index = this.client.index(indexName);
-      //   await index.deleteAllDocuments();
-      // }
+      for (const indexName of this.indexes.keys()) {
+        const index = this.client.index(indexName);
+        await index.deleteAllDocuments();
+      }
       this.logger.info('Indexes cleared');
     } catch (error) {
       this.logger.error('Failed to clear indexes', error);
@@ -239,14 +250,14 @@ export class MeilisearchService {
   }
 
   async createIndexes(): Promise<void> {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.client) return;
 
     try {
-      // for (const [name, settings] of this.indexes) {
-      //   await this.client.createIndex(name);
-      //   const index = this.client.index(name);
-      //   await index.updateSettings(settings);
-      // }
+      for (const [name, settings] of this.indexes) {
+        await this.client.createIndex(name);
+        const index = this.client.index(name);
+        await index.updateSettings(settings);
+      }
       this.logger.info('Indexes created/updated');
     } catch (error) {
       this.logger.error('Failed to create indexes', error);
