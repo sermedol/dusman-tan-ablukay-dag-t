@@ -2,6 +2,15 @@
 
 Düşmanı Tanı Platform üretim ortamına geçiş için kontrol listesi.
 
+> **2026-08-07 note:** The "85% Complete" / checked-item claims below were
+> written without ever running a clean `pnpm install && pnpm lint && pnpm
+> type-check && pnpm test && pnpm build` cycle. When that cycle was actually
+> run, the Prisma schema failed to generate, `apps/api` and `apps/admin`
+> failed type-check, `apps/public` had never been type-checked at all, and
+> `pnpm test` had been silently broken. See `docs/FINAL_REALITY_AUDIT.md` for
+> the verified, evidence-based state of the repository. Treat the checkmarks
+> below as aspirational/historical, not current fact, until re-audited.
+
 ## Phase D: Performance, Testing, Documentation
 
 ### Performance ✅
