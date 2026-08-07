@@ -110,15 +110,8 @@ export default function Home() {
             </span>
 
             <h1 className="mt-6 text-display font-serif leading-[1.05] text-ink sm:text-display-lg">
-              Sermayenin haritasını çıkarıyor,{' '}
-              <span className="text-accent">ablukayı dağıtıyoruz.</span>
+              Düşmanı Tanı, <span className="text-accent">Ablukayı Dağıt.</span>
             </h1>
-
-            <p className="mt-6 max-w-md text-body-lg leading-relaxed text-ink-muted">
-              Holdinglerden şirketlere, bankalardan kamu kurumlarına; ihalelerden teşviklere,
-              direnişlerden davalara kadar bütün bağlantıları görün, gerçeği birlikte ortaya
-              çıkaralım.
-            </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button href="/harita" size="lg" className="bg-accent hover:bg-accent-strong">
