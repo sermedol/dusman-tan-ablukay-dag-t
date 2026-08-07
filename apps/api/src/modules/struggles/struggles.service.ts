@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@umut-sen/database';
+import { PrismaService } from '@umutsensen/database';
 import { StruggleType, StruggleStatus } from '@prisma/client';
 
 @Injectable()

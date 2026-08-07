@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { StrugglesService } from './struggles.service';
-import { JwtAuthGuard } from '@umut-sen/auth';
+import { JwtAuthGuard } from '@umutsensen/auth';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { CurrentUserData } from '../../shared/types/current-user.types';
 import { StruggleType, StruggleStatus } from '@prisma/client';

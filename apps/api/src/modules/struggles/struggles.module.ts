@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { StrugglesController } from './struggles.controller';
 import { StrugglesService } from './struggles.service';
-import { DatabaseModule } from '@umut-sen/database';
+import { DatabaseModule } from '@umutsensen/database';
 
 @Module({
   imports: [DatabaseModule],

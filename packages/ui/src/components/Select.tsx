@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 
-interface SelectOption {
+export interface SelectOption {
   value: string;
   label: string;
   disabled?: boolean;

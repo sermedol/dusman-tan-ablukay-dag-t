@@ -48,3 +48,4 @@ yarn-debug.log*
 
 # OS
 Thumbs.db
+*.tsbuildinfo

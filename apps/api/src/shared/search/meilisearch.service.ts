@@ -243,7 +243,7 @@ export class MeilisearchService {
         const index = this.client.index(indexName);
         await index.deleteAllDocuments();
       }
-      this.logger.info('Indexes cleared');
+      this.logger.log('Indexes cleared');
     } catch (error) {
       this.logger.error('Failed to clear indexes', error);
     }
@@ -258,7 +258,7 @@ export class MeilisearchService {
         const index = this.client.index(name);
         await index.updateSettings(settings);
       }
-      this.logger.info('Indexes created/updated');
+      this.logger.log('Indexes created/updated');
     } catch (error) {
       this.logger.error('Failed to create indexes', error);
     }

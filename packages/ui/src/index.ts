@@ -1,6 +1,5 @@
 // Button
 export { Button } from './components/Button';
-export type { default as ButtonProps } from './components/Button';
 
 // Card
 export {

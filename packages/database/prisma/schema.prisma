@@ -116,7 +116,7 @@ model Entity {
   visibility              Visibility @default(draft)
   verificationStatus      VerificationStatus @default(unverified)
   primaryLocationId       String?
-  primaryLocation         Location? @relation(fields: [primaryLocationId], references: [id])
+  primaryLocation         Location? @relation("entityPrimaryLocation", fields: [primaryLocationId], references: [id])
   foundedAt               DateTime?
   closedAt                DateTime?
   activeFrom              DateTime?
@@ -142,9 +142,8 @@ model Entity {
   relationsAsSource       Relation[]            @relation("relationSource")
   relationsAsTarget       Relation[]            @relation("relationTarget")
   locations               Location[]            @relation("entityLocations")
-  origins                 RecordOrigin[]
-  revisions               Revision[]            @relation("entityRevisions")
   tags                    EntityTag[]
+  timelineEvents          TimelineEvent[]
 
   @@unique([entityTypeId, canonicalName])
   @@index([slug])
@@ -245,8 +244,7 @@ model Relation {
   version                 Int       @default(1)
 
   sourceEvidence          RelationSourceEvidence[]
-  origins                 RecordOrigin[]
-  revisions               Revision[]            @relation("relationRevisions")
+  timelineEvents          TimelineEvent[]
 
   @@unique([sourceEntityId, targetEntityId, relationTypeId])
   @@index([sourceEntityId])
@@ -254,7 +252,6 @@ model Relation {
   @@index([relationTypeId])
   @@index([visibility])
   @@index([publishedAt])
-  @@check("sourceEntityId != targetEntityId")
 }
 
 enum ConfidenceLevel {
@@ -262,6 +259,35 @@ enum ConfidenceLevel {
   medium
   low
   unverified
+}
+
+// ============================================================================
+// TIMELINE EVENTS
+// ============================================================================
+
+model TimelineEvent {
+  id                  String    @id @default(cuid())
+  entityId            String
+  entity              Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  eventType           String
+  title               String
+  description         String?
+  occurredAt          DateTime
+  endedAt             DateTime?
+  status              String    @default("confirmed")
+  verificationStatus  VerificationStatus @default(unverified)
+  source              String?
+  metadataJson        Json?
+  relatedRelationId   String?
+  relatedRelation     Relation? @relation(fields: [relatedRelationId], references: [id], onDelete: SetNull)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([entityId])
+  @@index([eventType])
+  @@index([occurredAt])
+  @@index([verificationStatus])
+  @@index([relatedRelationId])
 }
 
 // ============================================================================
@@ -310,7 +336,6 @@ model Source {
   struggleEvidence        StruggleSourceEvidence[]
   aliases                 EntityAlias[]
   locations               Location[]
-  origins                 RecordOrigin[]
 
   @@index([sourceTypeId])
   @@index([checksum])
@@ -380,7 +405,8 @@ model Location {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  entities        Entity[]            @relation("entityLocations")
+  entities            Entity[]            @relation("entityLocations")
+  primaryForEntities  Entity[]            @relation("entityPrimaryLocation")
 
   @@index([province])
   @@index([district])
@@ -454,9 +480,6 @@ model Revision {
   reviewedBy      String?
   reviewedAt      DateTime?
   reviewStatus    ReviewStatus @default(pending)
-
-  entity          Entity?   @relation("entityRevisions", fields: [resourceId], references: [id], onDelete: SetNull)
-  relation        Relation? @relation("relationRevisions", fields: [resourceId], references: [id], onDelete: SetNull)
 
   @@unique([resourceType, resourceId, revisionNumber])
   @@index([resourceId])
@@ -584,10 +607,6 @@ model RecordOrigin {
   rowNumber       Int?
   firstImportedAt DateTime  @default(now())
   lastSyncedAt    DateTime?
-
-  entity          Entity?   @relation(fields: [resourceId], references: [id], onDelete: Cascade)
-  relation        Relation? @relation(fields: [resourceId], references: [id], onDelete: Cascade)
-  source          Source?   @relation(fields: [resourceId], references: [id], onDelete: Cascade)
 
   @@unique([resourceType, resourceId, originType, originReference])
   @@index([resourceId])
@@ -735,6 +754,7 @@ model StruggleTag {
 // ============================================================================
 
 enum Visibility {
+  draft
   public
   internal
   private

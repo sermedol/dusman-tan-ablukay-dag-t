@@ -4,7 +4,7 @@ import {
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
-import { verifyToken } from '@umut-sen/auth';
+import { verifyToken } from '@umutsensen/auth';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
