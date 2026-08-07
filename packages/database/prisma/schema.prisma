@@ -15,35 +15,35 @@ datasource db {
 // ============================================================================
 
 model User {
-  id                      String    @id @default(cuid())
-  email                   String    @unique
-  username                String    @unique
-  passwordHash            String
-  fullName                String?
-  avatarUrl               String?
-  roleId                  String
-  role                    Role      @relation(fields: [roleId], references: [id])
-  status                  UserStatus @default(active)
-  twoFactorEnabled        Boolean   @default(false)
-  twoFactorSecret         String?
-  lastLoginAt             DateTime?
-  createdBy               String?
-  updatedBy               String?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  version                 Int       @default(1)
+  id               String     @id @default(cuid())
+  email            String     @unique
+  username         String     @unique
+  passwordHash     String
+  fullName         String?
+  avatarUrl        String?
+  roleId           String
+  role             Role       @relation(fields: [roleId], references: [id])
+  status           UserStatus @default(active)
+  twoFactorEnabled Boolean    @default(false)
+  twoFactorSecret  String?
+  lastLoginAt      DateTime?
+  createdBy        String?
+  updatedBy        String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  version          Int        @default(1)
 
-  entities                Entity[]            @relation("entityCreatedBy")
-  entitiesUpdated         Entity[]            @relation("entityUpdatedBy")
-  relations               Relation[]          @relation("relationCreatedBy")
-  relationsUpdated        Relation[]          @relation("relationUpdatedBy")
-  sources                 Source[]            @relation("sourceCreatedBy")
-  struggles               Struggle[]          @relation("struggleCreatedBy")
-  strugglesUpdated        Struggle[]          @relation("struggleUpdatedBy")
-  files                   File[]
-  revisions               Revision[]
-  auditEvents             AuditEvent[]
-  importBatches           ImportBatch[]
+  entities         Entity[]      @relation("entityCreatedBy")
+  entitiesUpdated  Entity[]      @relation("entityUpdatedBy")
+  relations        Relation[]    @relation("relationCreatedBy")
+  relationsUpdated Relation[]    @relation("relationUpdatedBy")
+  sources          Source[]      @relation("sourceCreatedBy")
+  struggles        Struggle[]    @relation("struggleCreatedBy")
+  strugglesUpdated Struggle[]    @relation("struggleUpdatedBy")
+  files            File[]
+  revisions        Revision[]
+  auditEvents      AuditEvent[]
+  importBatches    ImportBatch[]
 
   @@index([roleId])
   @@index([status])
@@ -56,12 +56,12 @@ enum UserStatus {
 }
 
 model Role {
-  id          String    @id @default(cuid())
-  code        String    @unique
+  id          String   @id @default(cuid())
+  code        String   @unique
   name        String
   description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   users       User[]
   permissions RolePermission[]
@@ -70,9 +70,9 @@ model Role {
 }
 
 model RolePermission {
-  id        String @id @default(cuid())
-  roleId    String
-  role      Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  id         String @id @default(cuid())
+  roleId     String
+  role       Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission String
 
   @@unique([roleId, permission])
@@ -84,69 +84,75 @@ model RolePermission {
 // ============================================================================
 
 model EntityType {
-  id              String    @id @default(cuid())
-  code            String    @unique
-  name            String
-  description     String?
-  icon            String?
-  colorToken      String?
-  singularName    String?
-  pluralName      String?
-  examples        String?
-  visibility      Visibility @default(public)
-  isSearchable    Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id           String     @id @default(cuid())
+  code         String     @unique
+  name         String
+  description  String?
+  icon         String?
+  colorToken   String?
+  singularName String?
+  pluralName   String?
+  examples     String?
+  visibility   Visibility @default(public)
+  isSearchable Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
-  entities        Entity[]
+  entities Entity[]
 
   @@index([code])
 }
 
 model Entity {
-  id                      String    @id @default(cuid())
-  entityTypeId            String
-  entityType              EntityType @relation(fields: [entityTypeId], references: [id])
-  canonicalName           String
-  slug                    String    @unique
-  shortName               String?
-  description             String?
-  summary                 String?
-  status                  EntityStatus @default(active)
-  visibility              Visibility @default(draft)
-  verificationStatus      VerificationStatus @default(unverified)
-  primaryLocationId       String?
-  primaryLocation         Location? @relation("entityPrimaryLocation", fields: [primaryLocationId], references: [id])
-  foundedAt               DateTime?
-  closedAt                DateTime?
-  activeFrom              DateTime?
-  activeUntil             DateTime?
-  websiteUrl              String?
-  logoFileId              String?
-  logoFile                File?     @relation("entityLogo", fields: [logoFileId], references: [id])
-  coverFileId             String?
-  coverFile               File?     @relation("entityCover", fields: [coverFileId], references: [id])
-  metadataJson            Json?
-  publishedRevisionId     String?
-  publishedAt             DateTime?
-  createdBy               String
-  createdByUser           User      @relation("entityCreatedBy", fields: [createdBy], references: [id])
-  updatedBy               String
-  updatedByUser           User      @relation("entityUpdatedBy", fields: [updatedBy], references: [id])
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  version                 Int       @default(1)
+  id                  String             @id @default(cuid())
+  entityTypeId        String
+  entityType          EntityType         @relation(fields: [entityTypeId], references: [id])
+  canonicalName       String
+  slug                String             @unique
+  // Stable human-readable ID from the research data source (e.g. Google Sheets),
+  // independent of the database primary key. Used to resolve sync upserts.
+  externalId          String?            @unique
+  shortName           String?
+  description         String?
+  summary             String?
+  status              EntityStatus       @default(active)
+  visibility          Visibility         @default(draft)
+  verificationStatus  VerificationStatus @default(unverified)
+  primaryLocationId   String?
+  primaryLocation     Location?          @relation("entityPrimaryLocation", fields: [primaryLocationId], references: [id])
+  foundedAt           DateTime?
+  closedAt            DateTime?
+  activeFrom          DateTime?
+  activeUntil         DateTime?
+  websiteUrl          String?
+  logoFileId          String?
+  logoFile            File?              @relation("entityLogo", fields: [logoFileId], references: [id])
+  coverFileId         String?
+  coverFile           File?              @relation("entityCover", fields: [coverFileId], references: [id])
+  metadataJson        Json?
+  publishedRevisionId String?
+  publishedAt         DateTime?
+  createdBy           String
+  createdByUser       User               @relation("entityCreatedBy", fields: [createdBy], references: [id])
+  updatedBy           String
+  updatedByUser       User               @relation("entityUpdatedBy", fields: [updatedBy], references: [id])
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  version             Int                @default(1)
 
-  aliases                 EntityAlias[]
-  sourceEvidence          EntitySourceEvidence[]
-  relationsAsSource       Relation[]            @relation("relationSource")
-  relationsAsTarget       Relation[]            @relation("relationTarget")
-  locations               Location[]            @relation("entityLocations")
-  tags                    EntityTag[]
-  timelineEvents          TimelineEvent[]
+  aliases            EntityAlias[]
+  sourceEvidence     EntitySourceEvidence[]
+  relationsAsSource  Relation[]             @relation("relationSource")
+  relationsAsTarget  Relation[]             @relation("relationTarget")
+  locations          Location[]             @relation("entityLocations")
+  tags               EntityTag[]
+  timelineEvents     TimelineEvent[]
+  struggleActorLinks StruggleActor[]
+  holdingRegistry    HoldingRegistry?
 
   @@unique([entityTypeId, canonicalName])
   @@index([slug])
+  @@index([externalId])
   @@index([entityTypeId])
   @@index([visibility])
   @@index([status])
@@ -161,19 +167,22 @@ enum EntityStatus {
 }
 
 model EntityAlias {
-  id          String    @id @default(cuid())
-  entityId    String
-  entity      Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  alias       String
-  aliasType   AliasType
-  validFrom   DateTime?
-  validUntil  DateTime?
-  language    String?   @default("tr")
-  sourceId    String?
-  source      Source?   @relation(fields: [sourceId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String    @id @default(cuid())
+  entityId   String
+  entity     Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  alias      String
+  aliasType  AliasType
+  validFrom  DateTime?
+  validUntil DateTime?
+  language   String?   @default("tr")
+  sourceId   String?
+  source     Source?   @relation(fields: [sourceId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
+  // Lets sync upsert an alias idempotently without requiring the sheet to
+  // supply its own synthetic external ID for every alias row.
+  @@unique([entityId, alias, aliasType])
   @@index([entityId])
   @@index([alias])
   @@index([aliasType])
@@ -193,65 +202,74 @@ enum AliasType {
 // ============================================================================
 
 model RelationType {
-  id                      String    @id @default(cuid())
-  code                    String    @unique
-  name                    String
-  inverseName             String?
-  category                String
-  description             String?
-  isDirected              Boolean   @default(true)
-  allowMultiple           Boolean   @default(true)
-  colorToken              String?
-  lineStyle               String?   @default("solid")
-  icon                    String?
-  sourceEntityTypeRules   Json?
-  targetEntityTypeRules   Json?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  id                    String   @id @default(cuid())
+  code                  String   @unique
+  name                  String
+  inverseName           String?
+  category              String
+  description           String?
+  isDirected            Boolean  @default(true)
+  allowMultiple         Boolean  @default(true)
+  colorToken            String?
+  lineStyle             String?  @default("solid")
+  icon                  String?
+  sourceEntityTypeRules Json?
+  targetEntityTypeRules Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
-  relations               Relation[]
+  relations Relation[]
 
   @@index([code])
   @@index([category])
 }
 
 model Relation {
-  id                      String    @id @default(cuid())
-  relationTypeId          String
-  relationType            RelationType @relation(fields: [relationTypeId], references: [id])
-  sourceEntityId          String
-  sourceEntity            Entity    @relation("relationSource", fields: [sourceEntityId], references: [id])
-  targetEntityId          String
-  targetEntity            Entity    @relation("relationTarget", fields: [targetEntityId], references: [id])
-  direction               String    @default("forward")
-  summary                 String?
-  description             String?
-  status                  EntityStatus @default(active)
-  visibility              Visibility @default(draft)
-  verificationStatus      VerificationStatus @default(unverified)
-  confidenceLevel         ConfidenceLevel @default(medium)
-  validFrom               DateTime?
-  validUntil              DateTime?
-  observedAt              DateTime?
-  publishedRevisionId     String?
-  publishedAt             DateTime?
-  createdBy               String
-  createdByUser           User      @relation("relationCreatedBy", fields: [createdBy], references: [id])
-  updatedBy               String
-  updatedByUser           User      @relation("relationUpdatedBy", fields: [updatedBy], references: [id])
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  version                 Int       @default(1)
+  id                  String             @id @default(cuid())
+  relationTypeId      String
+  relationType        RelationType       @relation(fields: [relationTypeId], references: [id])
+  sourceEntityId      String
+  sourceEntity        Entity             @relation("relationSource", fields: [sourceEntityId], references: [id])
+  targetEntityId      String
+  targetEntity        Entity             @relation("relationTarget", fields: [targetEntityId], references: [id])
+  externalId          String?            @unique
+  direction           String             @default("forward")
+  summary             String?
+  description         String?
+  status              EntityStatus       @default(active)
+  visibility          Visibility         @default(draft)
+  verificationStatus  VerificationStatus @default(unverified)
+  confidenceLevel     ConfidenceLevel    @default(medium)
+  validFrom           DateTime?
+  validUntil          DateTime?
+  observedAt          DateTime?
+  publishedRevisionId String?
+  publishedAt         DateTime?
+  createdBy           String
+  createdByUser       User               @relation("relationCreatedBy", fields: [createdBy], references: [id])
+  updatedBy           String
+  updatedByUser       User               @relation("relationUpdatedBy", fields: [updatedBy], references: [id])
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  version             Int                @default(1)
 
-  sourceEvidence          RelationSourceEvidence[]
-  timelineEvents          TimelineEvent[]
+  sourceEvidence RelationSourceEvidence[]
+  timelineEvents TimelineEvent[]
 
-  @@unique([sourceEntityId, targetEntityId, relationTypeId])
+  // NOTE: relations are intentionally NOT unique on (source, target, type) alone.
+  // The same pair of entities can have multiple relations of the same type across
+  // different historical periods (e.g. an ownership relation that ended and was
+  // later re-established under a different owner) - each is a distinct row
+  // disambiguated by validFrom/validUntil. Idempotency for sync-created relations
+  // is instead enforced via the unique `externalId` above.
+  @@index([sourceEntityId, targetEntityId, relationTypeId])
   @@index([sourceEntityId])
   @@index([targetEntityId])
   @@index([relationTypeId])
   @@index([visibility])
   @@index([publishedAt])
+  @@index([validFrom])
+  @@index([validUntil])
 }
 
 enum ConfidenceLevel {
@@ -266,24 +284,31 @@ enum ConfidenceLevel {
 // ============================================================================
 
 model TimelineEvent {
-  id                  String    @id @default(cuid())
-  entityId            String
-  entity              Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  eventType           String
-  title               String
-  description         String?
-  occurredAt          DateTime
-  endedAt             DateTime?
-  status              String    @default("confirmed")
-  verificationStatus  VerificationStatus @default(unverified)
-  source              String?
-  metadataJson        Json?
-  relatedRelationId   String?
-  relatedRelation     Relation? @relation(fields: [relatedRelationId], references: [id], onDelete: SetNull)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                 String             @id @default(cuid())
+  // Optional (was required): a timeline event may belong to a struggle instead
+  // of (or in addition to) an entity, mirroring the Sheet's EVENTS tab which can
+  // reference either.
+  entityId           String?
+  entity             Entity?            @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  struggleId         String?
+  struggle           Struggle?          @relation(fields: [struggleId], references: [id], onDelete: Cascade)
+  externalId         String?            @unique
+  eventType          String
+  title              String
+  description        String?
+  occurredAt         DateTime
+  endedAt            DateTime?
+  status             String             @default("confirmed")
+  verificationStatus VerificationStatus @default(unverified)
+  source             String?
+  metadataJson       Json?
+  relatedRelationId  String?
+  relatedRelation    Relation?          @relation(fields: [relatedRelationId], references: [id], onDelete: SetNull)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   @@index([entityId])
+  @@index([struggleId])
   @@index([eventType])
   @@index([occurredAt])
   @@index([verificationStatus])
@@ -295,51 +320,63 @@ model TimelineEvent {
 // ============================================================================
 
 model SourceType {
-  id          String    @id @default(cuid())
-  code        String    @unique
+  id          String   @id @default(cuid())
+  code        String   @unique
   name        String
   description String?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime @default(now())
 
-  sources     Source[]
+  sources Source[]
 }
 
 model Source {
-  id                      String    @id @default(cuid())
-  sourceTypeId            String
-  sourceType              SourceType @relation(fields: [sourceTypeId], references: [id])
-  title                   String
-  publisher               String?
-  author                  String?
-  publicationDate         DateTime?
-  accessedAt              DateTime?
-  originalUrl             String?
-  archivedUrl             String?
-  fileId                  String?
-  file                    File?     @relation(fields: [fileId], references: [id])
-  language                String?   @default("tr")
-  pageReference           String?
-  quoteExcerpt            String?
-  notes                   String?
-  reliabilityLevel        ReliabilityLevel @default(secondary)
-  verificationStatus      VerificationStatus @default(unverified)
-  checksum                String?
-  metadataJson            Json?
-  createdBy               String
-  createdByUser           User      @relation("sourceCreatedBy", fields: [createdBy], references: [id])
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  version                 Int       @default(1)
+  id                       String             @id @default(cuid())
+  sourceTypeId             String
+  sourceType               SourceType         @relation(fields: [sourceTypeId], references: [id])
+  externalId               String?            @unique
+  title                    String
+  publisher                String?
+  author                   String?
+  publicationDate          DateTime?
+  accessedAt               DateTime?
+  originalUrl              String?
+  archivedUrl              String?
+  fileId                   String?
+  file                     File?              @relation(fields: [fileId], references: [id])
+  // Drive file ID of the original document, distinct from `fileId` (which
+  // points at a copy already ingested into our own object storage).
+  driveFileId              String?
+  language                 String?            @default("tr")
+  pageReference            String?
+  quoteExcerpt             String?
+  notes                    String?
+  reliabilityLevel         ReliabilityLevel   @default(secondary)
+  verificationStatus       VerificationStatus @default(unverified)
+  // What kind of claim this source can factually support, e.g. "ownership",
+  // "tender_award", "struggle_timeline" - free text, from SOURCE_POLICY.
+  factualRole              String?
+  // Whether this source's own editorial/political framing may be carried into
+  // political_context-style fields. Governed by the Sheet's SOURCE_POLICY tab;
+  // defaults to false so unknown sources never leak political language.
+  politicalLanguageAllowed Boolean            @default(false)
+  checksum                 String?
+  metadataJson             Json?
+  createdBy                String
+  createdByUser            User               @relation("sourceCreatedBy", fields: [createdBy], references: [id])
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  version                  Int                @default(1)
 
-  entityEvidence          EntitySourceEvidence[]
-  relationEvidence        RelationSourceEvidence[]
-  struggleEvidence        StruggleSourceEvidence[]
-  aliases                 EntityAlias[]
-  locations               Location[]
+  entityEvidence   EntitySourceEvidence[]
+  relationEvidence RelationSourceEvidence[]
+  struggleEvidence StruggleSourceEvidence[]
+  aliases          EntityAlias[]
+  locations        Location[]
 
   @@index([sourceTypeId])
   @@index([checksum])
   @@index([verificationStatus])
+  @@index([driveFileId])
 }
 
 enum ReliabilityLevel {
@@ -350,18 +387,21 @@ enum ReliabilityLevel {
 }
 
 model EntitySourceEvidence {
-  id              String    @id @default(cuid())
-  entityId        String
-  entity          Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  sourceId        String
-  source          Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  evidenceType    String
-  excerpt         String?
-  pageNumber      Int?
-  supportsFrom    DateTime?
-  supportsUntil   DateTime?
-  notes           String?
-  createdAt       DateTime  @default(now())
+  id            String    @id @default(cuid())
+  entityId      String
+  entity        Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  sourceId      String
+  source        Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  evidenceType  String
+  // Which specific claim/field on the entity this evidence supports,
+  // e.g. "ownership", "founding_date" - narrower than evidenceType.
+  claimField    String?
+  excerpt       String?
+  pageNumber    Int?
+  supportsFrom  DateTime?
+  supportsUntil DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
 
   @@unique([entityId, sourceId, evidenceType])
   @@index([entityId])
@@ -369,15 +409,16 @@ model EntitySourceEvidence {
 }
 
 model RelationSourceEvidence {
-  id            String    @id @default(cuid())
-  relationId    String
-  relation      Relation  @relation(fields: [relationId], references: [id], onDelete: Cascade)
-  sourceId      String
-  source        Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  excerpt       String?
-  pageNumber    Int?
-  notes         String?
-  createdAt     DateTime  @default(now())
+  id         String   @id @default(cuid())
+  relationId String
+  relation   Relation @relation(fields: [relationId], references: [id], onDelete: Cascade)
+  sourceId   String
+  source     Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  claimField String?
+  excerpt    String?
+  pageNumber Int?
+  notes      String?
+  createdAt  DateTime @default(now())
 
   @@unique([relationId, sourceId])
   @@index([relationId])
@@ -389,24 +430,26 @@ model RelationSourceEvidence {
 // ============================================================================
 
 model Location {
-  id              String    @id @default(cuid())
-  name            String
-  locationType    LocationType
-  countryCode     String?   @default("TR")
-  province        String?
-  district        String?
-  neighborhood    String?
-  address         String?
-  latitude        Decimal?  @db.Decimal(10, 8)
-  longitude       Decimal?  @db.Decimal(11, 8)
-  accuracyLevel   AccuracyLevel @default(unknown)
-  sourceId        String?
-  source          Source?   @relation(fields: [sourceId], references: [id])
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String        @id @default(cuid())
+  externalId    String?       @unique
+  name          String
+  locationType  LocationType
+  countryCode   String?       @default("TR")
+  province      String?
+  district      String?
+  neighborhood  String?
+  address       String?
+  latitude      Decimal?      @db.Decimal(10, 8)
+  longitude     Decimal?      @db.Decimal(11, 8)
+  accuracyLevel AccuracyLevel @default(unknown)
+  sourceId      String?
+  source        Source?       @relation(fields: [sourceId], references: [id])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
-  entities            Entity[]            @relation("entityLocations")
-  primaryForEntities  Entity[]            @relation("entityPrimaryLocation")
+  entities           Entity[]   @relation("entityLocations")
+  primaryForEntities Entity[]   @relation("entityPrimaryLocation")
+  struggles          Struggle[]
 
   @@index([province])
   @@index([district])
@@ -434,22 +477,22 @@ enum AccuracyLevel {
 // ============================================================================
 
 model File {
-  id              String    @id @default(cuid())
-  objectKey       String    @unique
-  fileName        String
-  mimeType        String
-  sizeBytes       Int
-  checksum        String?
-  uploadedBy      String
-  uploadedByUser  User      @relation(fields: [uploadedBy], references: [id])
-  accessLevel     AccessLevel @default(internal)
-  expiryDate      DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String      @id @default(cuid())
+  objectKey      String      @unique
+  fileName       String
+  mimeType       String
+  sizeBytes      Int
+  checksum       String?
+  uploadedBy     String
+  uploadedByUser User        @relation(fields: [uploadedBy], references: [id])
+  accessLevel    AccessLevel @default(internal)
+  expiryDate     DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  sources         Source[]
-  entityLogos     Entity[]  @relation("entityLogo")
-  entityCovers    Entity[]  @relation("entityCover")
+  sources      Source[]
+  entityLogos  Entity[] @relation("entityLogo")
+  entityCovers Entity[] @relation("entityCover")
 
   @@index([uploadedBy])
   @@index([accessLevel])
@@ -467,19 +510,19 @@ enum AccessLevel {
 // ============================================================================
 
 model Revision {
-  id              String    @id @default(cuid())
-  resourceType    String
-  resourceId      String
-  revisionNumber  Int
-  snapshotJson    Json
-  changeSummary   String?
-  changeReason    String?
-  createdBy       String
-  createdByUser   User      @relation(fields: [createdBy], references: [id])
-  createdAt       DateTime  @default(now())
-  reviewedBy      String?
-  reviewedAt      DateTime?
-  reviewStatus    ReviewStatus @default(pending)
+  id             String       @id @default(cuid())
+  resourceType   String
+  resourceId     String
+  revisionNumber Int
+  snapshotJson   Json
+  changeSummary  String?
+  changeReason   String?
+  createdBy      String
+  createdByUser  User         @relation(fields: [createdBy], references: [id])
+  createdAt      DateTime     @default(now())
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  reviewStatus   ReviewStatus @default(pending)
 
   @@unique([resourceType, resourceId, revisionNumber])
   @@index([resourceId])
@@ -494,18 +537,18 @@ enum ReviewStatus {
 }
 
 model AuditEvent {
-  id            String    @id @default(cuid())
-  actorId       String
-  actor         User      @relation(fields: [actorId], references: [id])
-  action        String
-  resourceType  String
-  resourceId    String?
-  requestId     String?
-  ipHash        String?
-  userAgent     String?
-  beforeJson    Json?
-  afterJson     Json?
-  createdAt     DateTime  @default(now())
+  id           String   @id @default(cuid())
+  actorId      String
+  actor        User     @relation(fields: [actorId], references: [id])
+  action       String
+  resourceType String
+  resourceId   String?
+  requestId    String?
+  ipHash       String?
+  userAgent    String?
+  beforeJson   Json?
+  afterJson    Json?
+  createdAt    DateTime @default(now())
 
   @@index([actorId])
   @@index([resourceType])
@@ -518,33 +561,45 @@ model AuditEvent {
 // ============================================================================
 
 model ImportBatch {
-  id              String    @id @default(cuid())
-  originType      ImportOriginType
-  originFileId    String?
-  driveFileId     String?
-  fileName        String
-  fileChecksum    String?
-  templateType    String
-  templateVersion String?
-  uploadedBy      String?
-  uploadedByUser  User?     @relation(fields: [uploadedBy], references: [id])
-  status          ImportStatus
-  startedAt       DateTime?
-  completedAt     DateTime?
-  rowCount        Int?
-  validRowCount   Int?
-  invalidRowCount Int?
-  warningCount    Int?
-  errorMessage    String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                String           @id @default(cuid())
+  originType        ImportOriginType
+  originFileId      String?
+  driveFileId       String?
+  // Google Sheets spreadsheet ID this batch was synced from, when applicable.
+  spreadsheetId     String?
+  holdingRegistryId String?
+  holdingRegistry   HoldingRegistry? @relation(fields: [holdingRegistryId], references: [id])
+  fileName          String
+  fileChecksum      String?
+  templateType      String
+  templateVersion   String?
+  // True if this batch was a preview/dry-run: rows were parsed and validated
+  // but nothing was written to the publication tables.
+  dryRun            Boolean          @default(false)
+  // 'user:<id>' for an admin-triggered sync, or 'scheduled' for a future
+  // scheduler-triggered run.
+  triggeredBy       String?
+  uploadedBy        String?
+  uploadedByUser    User?            @relation(fields: [uploadedBy], references: [id])
+  status            ImportStatus
+  startedAt         DateTime?
+  completedAt       DateTime?
+  rowCount          Int?
+  validRowCount     Int?
+  invalidRowCount   Int?
+  warningCount      Int?
+  errorMessage      String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
-  rows            ImportRow[]
-  origins         RecordOrigin[]
+  rows    ImportRow[]
+  origins RecordOrigin[]
 
   @@index([originType])
   @@index([status])
   @@index([createdAt])
+  @@index([holdingRegistryId])
+  @@index([spreadsheetId])
 }
 
 enum ImportOriginType {
@@ -565,19 +620,22 @@ enum ImportStatus {
 }
 
 model ImportRow {
-  id                String    @id @default(cuid())
+  id                String          @id @default(cuid())
   importBatchId     String
-  importBatch       ImportBatch @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  importBatch       ImportBatch     @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
   sheetName         String?
   rowNumber         Int
   rawJson           Json
   normalizedJson    Json?
   status            ImportRowStatus
+  // Detected change type against the current published state:
+  // 'create' | 'update' | 'unchanged' | 'missing_from_source' | 'rejected'.
+  operation         String?
   errorJson         Json?
   warningJson       Json?
   matchedResourceId String?
   externalId        String?
-  createdAt         DateTime  @default(now())
+  createdAt         DateTime        @default(now())
 
   @@index([importBatchId])
   @@index([status])
@@ -595,17 +653,21 @@ enum ImportRowStatus {
 }
 
 model RecordOrigin {
-  id              String    @id @default(cuid())
+  id              String           @id @default(cuid())
   resourceType    String
   resourceId      String
   originType      ImportOriginType
   originReference String?
   importBatchId   String?
-  importBatch     ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+  importBatch     ImportBatch?     @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
   driveFileId     String?
   sheetName       String?
   rowNumber       Int?
-  firstImportedAt DateTime  @default(now())
+  // Deterministic hash of the normalized source row, used to skip re-writing
+  // unchanged records on repeat syncs. Compared on the NEXT sync, not within
+  // a single run.
+  contentHash     String?
+  firstImportedAt DateTime         @default(now())
   lastSyncedAt    DateTime?
 
   @@unique([resourceType, resourceId, originType, originReference])
@@ -618,42 +680,42 @@ model RecordOrigin {
 // ============================================================================
 
 model TaxonomyCategory {
-  id          String    @id @default(cuid())
-  code        String    @unique
-  name        String
-  parentId    String?
-  parent      TaxonomyCategory? @relation("taxonomyHierarchy", fields: [parentId], references: [id])
-  type        String
-  createdAt   DateTime  @default(now())
+  id        String            @id @default(cuid())
+  code      String            @unique
+  name      String
+  parentId  String?
+  parent    TaxonomyCategory? @relation("taxonomyHierarchy", fields: [parentId], references: [id])
+  type      String
+  createdAt DateTime          @default(now())
 
-  children    TaxonomyCategory[] @relation("taxonomyHierarchy")
-  values      TaxonomyValue[]
+  children TaxonomyCategory[] @relation("taxonomyHierarchy")
+  values   TaxonomyValue[]
 
   @@index([type])
 }
 
 model TaxonomyValue {
-  id          String    @id @default(cuid())
+  id          String           @id @default(cuid())
   categoryId  String
   category    TaxonomyCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   value       String
   label       String
   description String?
   sortOrder   Int?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime         @default(now())
 
-  tags        EntityTag[]
+  tags EntityTag[]
 
   @@index([categoryId])
 }
 
 model EntityTag {
-  id                  String    @id @default(cuid())
-  entityId            String
-  entity              Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  taxonomyValueId     String
-  taxonomyValue       TaxonomyValue @relation(fields: [taxonomyValueId], references: [id], onDelete: Cascade)
-  createdAt           DateTime  @default(now())
+  id              String        @id @default(cuid())
+  entityId        String
+  entity          Entity        @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  taxonomyValueId String
+  taxonomyValue   TaxonomyValue @relation(fields: [taxonomyValueId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
 
   @@unique([entityId, taxonomyValueId])
   @@index([entityId])
@@ -664,41 +726,51 @@ model EntityTag {
 // ============================================================================
 
 model Struggle {
-  id                      String    @id @default(cuid())
-  title                   String
-  slug                    String    @unique
-  description             String?
-  summary                 String?
-  type                    StruggleType
-  status                  StruggleStatus @default(active)
-  visibility              Visibility @default(draft)
-  verificationStatus      VerificationStatus @default(unverified)
-  startDate               DateTime?
-  endDate                 DateTime?
-  location                String?
-  latitude                Decimal?  @db.Decimal(10, 8)
-  longitude               Decimal?  @db.Decimal(11, 8)
-  participants            String?
-  outcome                 String?
-  lessons                 String?
-  relatedEntities         String?   // JSON array of entity IDs
-  publicationDate         DateTime?
-  publishedAt             DateTime?
-  createdBy               String
-  createdByUser           User      @relation("struggleCreatedBy", fields: [createdBy], references: [id])
-  updatedBy               String
-  updatedByUser           User      @relation("struggleUpdatedBy", fields: [updatedBy], references: [id])
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  version                 Int       @default(1)
+  id                 String             @id @default(cuid())
+  externalId         String?            @unique
+  title              String
+  slug               String             @unique
+  description        String?
+  summary            String?
+  type               StruggleType
+  status             StruggleStatus     @default(active)
+  visibility         Visibility         @default(draft)
+  verificationStatus VerificationStatus @default(unverified)
+  startDate          DateTime?
+  endDate            DateTime?
+  // Free-text location label is kept for backward compatibility; locationId
+  // links to a real Location record when the Sheet's LOCATIONS tab resolves one.
+  location           String?
+  locationId         String?
+  locationRef        Location?          @relation(fields: [locationId], references: [id])
+  latitude           Decimal?           @db.Decimal(10, 8)
+  longitude          Decimal?           @db.Decimal(11, 8)
+  participants       String?
+  outcome            String?
+  lessons            String?
+  relatedEntities    String? // JSON array of entity IDs
+  publicationDate    DateTime?
+  publishedAt        DateTime?
+  createdBy          String
+  createdByUser      User               @relation("struggleCreatedBy", fields: [createdBy], references: [id])
+  updatedBy          String
+  updatedByUser      User               @relation("struggleUpdatedBy", fields: [updatedBy], references: [id])
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  version            Int                @default(1)
 
-  sourceEvidence          StruggleSourceEvidence[]
-  tags                    StruggleTag[]
+  sourceEvidence StruggleSourceEvidence[]
+  tags           StruggleTag[]
+  actors         StruggleActor[]
+  demands        StruggleDemand[]
+  actions        StruggleAction[]
+  timelineEvents TimelineEvent[]
 
   @@index([type])
   @@index([status])
   @@index([visibility])
   @@index([slug])
+  @@index([locationId])
 }
 
 enum StruggleType {
@@ -722,15 +794,16 @@ enum StruggleStatus {
 }
 
 model StruggleSourceEvidence {
-  id              String    @id @default(cuid())
-  struggleId      String
-  struggle        Struggle  @relation(fields: [struggleId], references: [id], onDelete: Cascade)
-  sourceId        String
-  source          Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  excerpt         String?
-  pageNumber      Int?
-  notes           String?
-  createdAt       DateTime  @default(now())
+  id         String   @id @default(cuid())
+  struggleId String
+  struggle   Struggle @relation(fields: [struggleId], references: [id], onDelete: Cascade)
+  sourceId   String
+  source     Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  claimField String?
+  excerpt    String?
+  pageNumber Int?
+  notes      String?
+  createdAt  DateTime @default(now())
 
   @@unique([struggleId, sourceId])
   @@index([struggleId])
@@ -738,15 +811,121 @@ model StruggleSourceEvidence {
 }
 
 model StruggleTag {
-  id              String    @id @default(cuid())
-  struggleId      String
-  struggle        Struggle  @relation(fields: [struggleId], references: [id], onDelete: Cascade)
-  tag             String
-  createdAt       DateTime  @default(now())
+  id         String   @id @default(cuid())
+  struggleId String
+  struggle   Struggle @relation(fields: [struggleId], references: [id], onDelete: Cascade)
+  tag        String
+  createdAt  DateTime @default(now())
 
   @@unique([struggleId, tag])
   @@index([struggleId])
   @@index([tag])
+}
+
+// Who was involved in a struggle and on which side - mirrors the Sheet's
+// STRUGGLE_ACTORS tab. `entityId` links to a real Entity when the actor is
+// already a known entity (a union, a company); `actorName` covers actors
+// that aren't (yet) their own Entity record.
+model StruggleActor {
+  id         String   @id @default(cuid())
+  struggleId String
+  struggle   Struggle @relation(fields: [struggleId], references: [id], onDelete: Cascade)
+  externalId String?  @unique
+  entityId   String?
+  entity     Entity?  @relation(fields: [entityId], references: [id])
+  actorName  String?
+  role       String?
+  side       String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([struggleId])
+  @@index([entityId])
+}
+
+// A specific demand raised during a struggle - mirrors STRUGGLE_DEMANDS.
+model StruggleDemand {
+  id         String   @id @default(cuid())
+  struggleId String
+  struggle   Struggle @relation(fields: [struggleId], references: [id], onDelete: Cascade)
+  externalId String?  @unique
+  demand     String
+  status     String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([struggleId])
+}
+
+// A discrete action taken during a struggle (a strike day, a filing, a march)
+// - mirrors STRUGGLE_ACTIONS. Distinct from TimelineEvent, which is the
+// broader entity/struggle timeline; an action is always struggle-scoped.
+model StruggleAction {
+  id          String    @id @default(cuid())
+  struggleId  String
+  struggle    Struggle  @relation(fields: [struggleId], references: [id], onDelete: Cascade)
+  externalId  String?   @unique
+  actionType  String?
+  title       String?
+  description String?
+  occurredAt  DateTime?
+  location    String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([struggleId])
+  @@index([occurredAt])
+}
+
+// ============================================================================
+// HOLDING REGISTRY & GOOGLE SHEETS SYNC
+// ============================================================================
+
+// One row per holding registered in the Master Registry Google Sheet
+// (MASTER_HOLDINGS tab). This is sync/discovery metadata, NOT the public
+// holding profile itself - the profile is the linked Entity (entityType
+// code "holding"). Adding a new holding here (with sync_enabled = true) is
+// how a new holding's data source is discovered - no code change required.
+model HoldingRegistry {
+  id              String          @id @default(cuid())
+  // e.g. "holding:yildizlar-sss" - matches the external ID used throughout
+  // that holding's own sheet and, once published, the linked Entity's
+  // externalId.
+  holdingId       String          @unique
+  holdingName     String
+  shortName       String?
+  driveFolderUrl  String?
+  spreadsheetUrl  String?
+  spreadsheetId   String?
+  status          String?
+  researchStatus  String?
+  syncEnabled     Boolean         @default(false)
+  syncMode        HoldingSyncMode @default(manual)
+  importMode      String?
+  templateVersion String?
+  dataOwner       String?
+  reviewer        String?
+  lastSyncAt      DateTime?
+  lastSyncStatus  String?
+  notes           String?
+  entityId        String?         @unique
+  entity          Entity?         @relation(fields: [entityId], references: [id])
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  importBatches ImportBatch[]
+
+  @@index([syncEnabled])
+  @@index([spreadsheetId])
+}
+
+enum HoldingSyncMode {
+  manual
+  scheduled
+  manual_and_scheduled
 }
 
 // ============================================================================
