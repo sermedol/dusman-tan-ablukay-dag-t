@@ -225,9 +225,18 @@ Sistem 3 veri giriş kanalını destekler:
 
 1. **Admin Paneli** — Manuel form girişi
 2. **Excel/XLSX/CSV** — Toplu import
-3. **Google Drive** — Otomatik senkronizasyon
+3. **Google Drive / Sheets** — Master Registry üzerinden otomatik keşif ve senkronizasyon
 
 Tüm kaynaklar aynı doğrulama akışına girer.
+
+### Google Drive / Sheets Veri Hattı
+
+Araştırma verisinin ana çalışma kaynağı Google Drive + Google Sheets'tir;
+PostgreSQL yayımlanabilir/doğrulanmış uygulama veritabanıdır. Yeni bir
+holding eklemek Master Registry sayfasına bir satır eklemekten ibarettir —
+backend kodu değiştirmek gerekmez. Detaylı mimari, kimlik bilgisi kurulumu,
+sheet formatı, sync yaşam döngüsü ve sorun giderme için:
+[`docs/GOOGLE_DRIVE_DATA_PIPELINE.md`](docs/GOOGLE_DRIVE_DATA_PIPELINE.md)
 
 ## 🔄 Yayın Akışı
 
