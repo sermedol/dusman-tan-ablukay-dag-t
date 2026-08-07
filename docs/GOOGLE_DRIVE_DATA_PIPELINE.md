@@ -221,19 +221,73 @@ The full per-row detail (`sheetName`, `rowNumber`, `externalId`, `operation`,
 - `GET /api/v1/data-sources/imports/:id/rows?status=&skip=&take=`
 - `GET /api/v1/data-sources/imports/:id/errors`
 
-## 6. Adding a new holding
+## 6. Running a sync from GitHub Actions (`sync-holdings.yml`)
+
+Sections 1-5 above describe the sync as an API endpoint
+(`POST /api/v1/data-sources/sync/:holdingId`), which requires an already-running
+API instance with real Google credentials and a real Postgres reachable from
+wherever that API runs. Many environments this repo is developed in (including
+this repo's own dev sandbox and CI) have **no network path to Google's APIs at
+all** - only a GitHub Actions runner does, since it has ordinary outbound
+internet access.
+
+`.github/workflows/sync-holdings.yml` runs the same sync logic
+(`HoldingSyncService`, via `apps/api/scripts/run-holding-sync.ts`) standalone,
+outside the Nest HTTP server, directly against a Postgres you provide. It is
+`workflow_dispatch`-only - it never fires on push, PR, or a schedule - and it
+never no-ops silently: without its three required secrets it fails fast with a
+clear error rather than pretending to succeed.
+
+**One-time setup (done by a repo admin, not by this codebase):**
+
+1. Create a Google Cloud service account and a JSON key for it.
+2. Share the Master Registry spreadsheet, and every holding spreadsheet it
+   points to, with that service account's `client_email` (Viewer access is
+   enough - the pipeline is read-only against Sheets).
+3. Provision a real, persistent Postgres (the workflow does **not** stand up
+   its own database - GitHub Actions runners are ephemeral, so anything
+   written to a runner-local Postgres would be lost the moment the job ends).
+4. In the repo's Settings -> Secrets and variables -> Actions, add:
+   - `GOOGLE_SERVICE_ACCOUNT_JSON` - the full service-account key JSON.
+   - `GOOGLE_MASTER_SPREADSHEET_ID` - the Master Registry spreadsheet ID.
+   - `DATABASE_URL` - the persistent Postgres connection string.
+
+**Running it:** Actions tab -> "Sync Holdings from Google Sheets" -> "Run
+workflow". Inputs:
+
+- `dry_run` (default `true`) - preview only, no database writes. Recommended
+  for the first run against any new holding.
+- `holding_id` (optional) - sync only this one holding (e.g.
+  `holding:yildizlar-sss`); leave empty to sync every `sync_enabled` holding
+  in the Master Registry.
+
+The job applies pending Prisma migrations, seeds reference data (entity/
+relation/source types, roles), refreshes the Master Registry, then runs the
+sync and prints per-holding counts plus any row errors/warnings to the
+workflow log. It exits non-zero if any targeted holding fails, so a red run
+in the Actions tab means "something needs attention," never "silently did
+nothing."
+
+This path writes to whichever Postgres `DATABASE_URL` points at - it is
+**not** connected to any deployed instance of this app unless you point it at
+that same database. Getting synced data to actually appear on a running site
+still requires that site's API to be reading from the same `DATABASE_URL`.
+
+## 7. Adding a new holding
 
 1. Add a row to the Master Registry's `MASTER_HOLDINGS` tab: `holding_id`,
    `holding_name`, `spreadsheet_id`, `sync_enabled = EVET`.
 2. Share that holding's spreadsheet with the service account.
-3. `POST /api/v1/data-sources/refresh-registry` (or click "Master
-   Registry'yi Yenile" in the admin panel).
-4. `POST /api/v1/data-sources/preview/:holdingId` to dry-run it first.
-5. `POST /api/v1/data-sources/sync/:holdingId` to actually import it.
+3. Trigger a sync via either path:
+   - API: `POST /api/v1/data-sources/refresh-registry`, then
+     `POST /api/v1/data-sources/preview/:holdingId` (dry run) and
+     `POST /api/v1/data-sources/sync/:holdingId`; or
+   - GitHub Actions: run `sync-holdings.yml` (section 6), optionally scoped
+     to this `holding_id`.
 
 No backend code changes are required for any of this.
 
-## 7. Adding a new source / entity type / relation type
+## 8. Adding a new source / entity type / relation type
 
 `EntityType`, `RelationType`, and `SourceType` are lookup tables, not enums -
 add a row via `packages/database/src/seed.ts` (or a future admin CRUD screen)
@@ -245,7 +299,7 @@ require a migration; the ten seeded values were judged to already cover the
 categories described in the integration request, so none were added in this
 pass.
 
-## 8. Political-language source policy
+## 9. Political-language source policy
 
 Editorial/political framing may only ever be attributed to sources on
 `umutsen.org`, `komiteler.org`, or `e-komite.com`
@@ -257,7 +311,7 @@ independent of whatever the sheet's own `SOURCE_POLICY` tab says, precisely
 so a compromised or mistaken sheet row can't grant political-language status
 to an untrusted source.
 
-## 9. Known limitations / next steps
+## 10. Known limitations / next steps
 
 - **No live test against the real Yıldızlar SSS sheet.** See "Status of this
   document" above.

@@ -1,0 +1,74 @@
+name: Sync Holdings from Google Sheets
+
+# Manually-triggered only (never scheduled/automatic - see
+# docs/GOOGLE_DRIVE_DATA_PIPELINE.md "no real scheduler" limitation). Runs
+# the Google Sheets -> Postgres sync pipeline on GitHub's own runners, which
+# (unlike this repo's dev sandbox) have normal internet access to Google's
+# APIs. Requires three repository secrets to do anything:
+#
+#   GOOGLE_SERVICE_ACCOUNT_JSON   - a Google service-account credential JSON
+#   GOOGLE_MASTER_SPREADSHEET_ID  - the Master Registry spreadsheet ID
+#   DATABASE_URL                  - a real, persistent Postgres connection
+#                                    string (this workflow does NOT stand up
+#                                    its own database - GitHub Actions runners
+#                                    are ephemeral, so anything written to a
+#                                    runner-local Postgres would vanish when
+#                                    the job ends)
+#
+# Without those three secrets set, this workflow still runs safely and exits
+# with a clear error - it never silently no-ops or fabricates a result.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (preview only, no database writes)"
+        type: boolean
+        default: true
+      holding_id:
+        description: "Sync only this holding_id (e.g. holding:yildizlar-sss). Leave empty to sync every sync_enabled holding."
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Apply database migrations
+        working-directory: packages/database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm migrate:deploy
+
+      - name: Seed reference data (entity/relation/source types, roles)
+        working-directory: packages/database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm seed
+
+      - name: Run holding sync
+        working-directory: apps/api
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GOOGLE_DRIVE_ENABLED: "true"
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_MASTER_SPREADSHEET_ID: ${{ secrets.GOOGLE_MASTER_SPREADSHEET_ID }}
+          SYNC_DRY_RUN: ${{ inputs.dry_run }}
+          SYNC_HOLDING_ID: ${{ inputs.holding_id }}
+        run: node --loader @swc-node/register/esm scripts/run-holding-sync.ts
