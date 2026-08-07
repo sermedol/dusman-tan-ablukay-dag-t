@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from './modules/auth/auth.module';
+import { DataSourcesModule } from './modules/data-sources/data-sources.module';
 import { EntitiesModule } from './modules/entities/entities.module';
 import { HealthModule } from './modules/health/health.module';
 import { ImportsModule } from './modules/imports/imports.module';
@@ -30,6 +31,7 @@ import { PrismaModule } from './shared/prisma/prisma.module';
     ImportsModule,
     PublicModule,
     StrugglesModule,
+    DataSourcesModule,
   ],
   controllers: [],
   providers: [],
