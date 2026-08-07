@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import Graph from 'graphology';
+import { useEffect, useRef, useState } from 'react';
 import Sigma from 'sigma';
-import { EdgeDisplayData, NodeDisplayData } from 'sigma/types';
 
 interface Entity {
   id: string;
@@ -53,7 +52,7 @@ export default function GraphComponent({ relations, onNodeSelect }: GraphCompone
       });
 
       // Add edges to graph
-      relations.forEach((rel, idx) => {
+      relations.forEach((rel) => {
         graph.addEdge(rel.sourceEntity.id, rel.targetEntity.id, {
           label: rel.relationType?.name || 'İlişki',
           type: 'line',

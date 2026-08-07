@@ -9,7 +9,8 @@
     "seed": "node --loader tsx src/seed.ts",
     "reset": "prisma migrate reset --force",
     "generate": "prisma generate",
-    "format": "prettier --write src"
+    "format": "prettier --write src",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0"

@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
 
-interface Location {
+import type { Location } from '../../components/MapComponent';
+
+interface RawLocation {
   id: string;
   name: string;
   latitude?: number;
@@ -26,11 +28,13 @@ export default function HaritaPage() {
       try {
         const response = await fetch('http://localhost:3001/api/v1/public/locations');
         if (response.ok) {
-          const data = await response.json();
+          const data: RawLocation[] = await response.json();
           // Filter locations with coordinates
-          const validLocations = data
-            .filter((loc: any) => loc.latitude && loc.longitude)
-            .map((loc: any) => ({
+          const validLocations: Location[] = data
+            .filter((loc): loc is RawLocation & { latitude: number; longitude: number } =>
+              typeof loc.latitude === 'number' && typeof loc.longitude === 'number'
+            )
+            .map((loc) => ({
               id: loc.id,
               name: loc.name,
               latitude: loc.latitude,

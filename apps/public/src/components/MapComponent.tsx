@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
 import maplibregl, { Map as MaplibreMap } from 'maplibre-gl';
+import { useEffect, useRef, useState } from 'react';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-interface Location {
+export interface Location {
   id: string;
   name: string;
   latitude: number;
@@ -158,7 +158,7 @@ export default function MapComponent({ locations, onLocationSelect }: MapCompone
           });
 
           // When a cluster is clicked, zoom into it
-          map.current?.on('click', 'clusters', (e) => {
+          map.current?.on('click', 'clusters', () => {
             const features = map.current?.queryRenderedFeatures({ layers: ['clusters'] });
             if (features && features.length > 0) {
               const clickedFeature = features[0];

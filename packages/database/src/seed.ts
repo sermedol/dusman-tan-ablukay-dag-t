@@ -107,7 +107,7 @@ async function main() {
     },
   });
 
-  const viewerRole = await prisma.role.upsert({
+  await prisma.role.upsert({
     where: { code: 'viewer' },
     update: {},
     create: {
@@ -125,7 +125,7 @@ async function main() {
   console.log('✅ Roles seeded');
 
   // Entity Types
-  const holdingType = await prisma.entityType.upsert({
+  await prisma.entityType.upsert({
     where: { code: 'holding' },
     update: {},
     create: {
@@ -137,7 +137,7 @@ async function main() {
     },
   });
 
-  const companyType = await prisma.entityType.upsert({
+  await prisma.entityType.upsert({
     where: { code: 'company' },
     update: {},
     create: {
@@ -149,7 +149,7 @@ async function main() {
     },
   });
 
-  const publicInstitutionType = await prisma.entityType.upsert({
+  await prisma.entityType.upsert({
     where: { code: 'public_institution' },
     update: {},
     create: {
@@ -161,7 +161,7 @@ async function main() {
     },
   });
 
-  const bankType = await prisma.entityType.upsert({
+  await prisma.entityType.upsert({
     where: { code: 'bank' },
     update: {},
     create: {
@@ -173,7 +173,7 @@ async function main() {
     },
   });
 
-  const unionType = await prisma.entityType.upsert({
+  await prisma.entityType.upsert({
     where: { code: 'union' },
     update: {},
     create: {
@@ -185,7 +185,7 @@ async function main() {
     },
   });
 
-  const workerResistanceType = await prisma.entityType.upsert({
+  await prisma.entityType.upsert({
     where: { code: 'worker_resistance' },
     update: {},
     create: {
@@ -230,7 +230,7 @@ async function main() {
   console.log('✅ Source types seeded');
 
   // Relation Types
-  const ownsRelationType = await prisma.relationType.upsert({
+  await prisma.relationType.upsert({
     where: { code: 'owns' },
     update: {},
     create: {
@@ -245,7 +245,7 @@ async function main() {
     },
   });
 
-  const worksForRelationType = await prisma.relationType.upsert({
+  await prisma.relationType.upsert({
     where: { code: 'works_for' },
     update: {},
     create: {
@@ -260,7 +260,7 @@ async function main() {
     },
   });
 
-  const resistsAgainstRelationType = await prisma.relationType.upsert({
+  await prisma.relationType.upsert({
     where: { code: 'resists_against' },
     update: {},
     create: {

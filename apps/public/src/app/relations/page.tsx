@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 interface Relation {
   id: string;
@@ -14,7 +13,6 @@ interface Relation {
 }
 
 export default function RelationsPage() {
-  const router = useRouter();
   const [relations, setRelations] = useState<Relation[]>([]);
   const [loading, setLoading] = useState(true);
 
