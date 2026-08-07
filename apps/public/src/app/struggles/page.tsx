@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 
+import { API_BASE_URL, IS_PREVIEW_MODE } from '../../lib/config';
+import { DEMO_STRUGGLES } from '../../lib/demo-data';
+
 interface Struggle {
   id: string;
   title: string;
@@ -41,9 +44,15 @@ export default function StrugglesPage() {
   }, []);
 
   const fetchStruggles = async () => {
+    if (IS_PREVIEW_MODE) {
+      setStruggles([...DEMO_STRUGGLES]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3001/api/v1/public/struggles');
+      const response = await fetch(`${API_BASE_URL}/public/struggles`);
       if (response.ok) {
         const data = await response.json();
         setStruggles(data);

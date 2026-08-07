@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+import { API_BASE_URL, IS_PREVIEW_MODE } from '../../lib/config';
+import { DEMO_RELATIONS } from '../../lib/demo-data';
+
 interface Relation {
   id: string;
   sourceEntity?: { id: string; canonicalName: string };
@@ -17,10 +20,16 @@ export default function RelationsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (IS_PREVIEW_MODE) {
+      setRelations([...DEMO_RELATIONS]);
+      setLoading(false);
+      return;
+    }
+
     const fetchRelations = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/api/v1/public/relations?limit=100');
+        const response = await fetch(`${API_BASE_URL}/public/relations?limit=100`);
         if (!response.ok) throw new Error('Failed to fetch relations');
         const data = await response.json();
         setRelations(data);

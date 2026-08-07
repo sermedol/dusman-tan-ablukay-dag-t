@@ -1,0 +1,68 @@
+name: Pages Preview
+
+# Builds the public Next.js app (apps/public) in static-export "preview mode"
+# and deploys it to GitHub Pages. This is a read-only demo/preview surface
+# for reviewing UI and navigation - it is NOT the production application and
+# carries no real backend, database, or credentials. See
+# docs/GITHUB_PAGES_PREVIEW.md for details and the one-time manual setup step.
+
+on:
+  push:
+    branches: [düşmanıtanı]
+    paths:
+      - "apps/public/**"
+      - "packages/ui/**"
+      - ".github/workflows/pages-preview.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-preview
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build static preview
+        working-directory: apps/public
+        env:
+          GITHUB_PAGES: "true"
+          NEXT_PUBLIC_PREVIEW_MODE: "true"
+          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+          # No real API in the static preview - this value is never used
+          # because NEXT_PUBLIC_PREVIEW_MODE short-circuits all data fetching
+          # to the bundled demo dataset (see src/lib/demo-data.ts).
+          NEXT_PUBLIC_API_URL: "unused-in-preview-mode"
+        run: pnpm build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/public/out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

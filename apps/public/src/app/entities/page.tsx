@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { API_BASE_URL, IS_PREVIEW_MODE } from '../../lib/config';
+import { DEMO_ENTITIES } from '../../lib/demo-data';
+
 interface Entity {
   id: string;
   canonicalName: string;
@@ -19,10 +22,16 @@ export default function EntitiesPage() {
   const [query, setQuery] = useState('');
 
   useEffect(() => {
+    if (IS_PREVIEW_MODE) {
+      setEntities([...DEMO_ENTITIES]);
+      setLoading(false);
+      return;
+    }
+
     const fetchEntities = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/api/v1/public/entities?limit=100');
+        const response = await fetch(`${API_BASE_URL}/public/entities?limit=100`);
         if (!response.ok) throw new Error('Failed to fetch entities');
         const data = await response.json();
         setEntities(data);

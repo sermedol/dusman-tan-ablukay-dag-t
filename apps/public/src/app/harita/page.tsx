@@ -4,6 +4,8 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
 import type { Location } from '../../components/MapComponent';
+import { API_BASE_URL, IS_PREVIEW_MODE } from '../../lib/config';
+import { DEMO_LOCATIONS } from '../../lib/demo-data';
 
 interface RawLocation {
   id: string;
@@ -24,9 +26,15 @@ export default function HaritaPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (IS_PREVIEW_MODE) {
+      setLocations([...DEMO_LOCATIONS]);
+      setLoading(false);
+      return;
+    }
+
     const fetchLocations = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/v1/public/locations');
+        const response = await fetch(`${API_BASE_URL}/public/locations`);
         if (response.ok) {
           const data: RawLocation[] = await response.json();
           // Filter locations with coordinates

@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
+import { API_BASE_URL, IS_PREVIEW_MODE } from '../../lib/config';
+import { DEMO_SEARCH_RESULTS } from '../../lib/demo-data';
+
 interface SearchResult {
   id: string;
   type: 'entity' | 'relation' | 'source';
@@ -34,11 +37,20 @@ function SearchPageContent() {
       return;
     }
 
+    if (IS_PREVIEW_MODE) {
+      const needle = q.toLocaleLowerCase('tr');
+      setResults(
+        DEMO_SEARCH_RESULTS.filter((r) => r.title.toLocaleLowerCase('tr').includes(needle))
+      );
+      setLoading(false);
+      return;
+    }
+
     const fetchResults = async () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `http://localhost:3001/api/v1/public/search?q=${encodeURIComponent(q)}`,
+          `${API_BASE_URL}/public/search?q=${encodeURIComponent(q)}`,
         );
         if (!response.ok) throw new Error('Search failed');
         const data = await response.json();

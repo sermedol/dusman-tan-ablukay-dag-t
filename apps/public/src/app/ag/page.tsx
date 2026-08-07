@@ -3,6 +3,9 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
+import { API_BASE_URL, IS_PREVIEW_MODE } from '../../lib/config';
+import { DEMO_RELATIONS } from '../../lib/demo-data';
+
 interface Entity {
   id: string;
   canonicalName: string;
@@ -28,9 +31,22 @@ export default function AgPage() {
 
   useEffect(() => {
     const initGraph = async () => {
+      if (IS_PREVIEW_MODE) {
+        const data = [...DEMO_RELATIONS] as unknown as Relation[];
+        setRelations(data);
+        const entities = new Set<string>();
+        data.forEach((rel) => {
+          entities.add(rel.sourceEntity.id);
+          entities.add(rel.targetEntity.id);
+        });
+        setStats({ relations: data.length, entities: entities.size });
+        setLoading(false);
+        return;
+      }
+
       try {
         // Fetch relations from API
-        const response = await fetch('http://localhost:3001/api/v1/public/relations?limit=200');
+        const response = await fetch(`${API_BASE_URL}/public/relations?limit=200`);
         if (response.ok) {
           const data = await response.json();
           setRelations(data);
