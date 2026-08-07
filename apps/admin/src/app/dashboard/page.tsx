@@ -103,6 +103,7 @@ export default function DashboardPage() {
             <ActionButton href="/dashboard/sources" label="Kaynakları Yönet" />
             <ActionButton href="/dashboard/verification" label="Doğrulama Merkezi" />
             <ActionButton href="/dashboard/import" label="İçe Aktarma" />
+            <ActionButton href="/dashboard/data-sources" label="Veri Kaynakları / Google Sync" />
             <ActionButton href="/dashboard/users" label="Kullanıcıları Yönet" />
           </div>
         </div>
