@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
-import { Card, CardContent, CardHeader, CardTitle, Button } from '@dusman/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@dusman/ui';
 import { RelationshipGraph } from '@/components/RelationshipGraph';
 import clsx from 'clsx';
 

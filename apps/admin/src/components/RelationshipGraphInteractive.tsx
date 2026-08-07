@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Sigma, DagreLayout, NodeReducer, EdgeReducer, useRegisterEvents, useCamera, GivenUpRenderingError } from 'sigma';
 import { FiZoomIn, FiZoomOut, FiMaximize2 } from 'react-icons/fi';
 
 interface GraphNode {
@@ -31,14 +30,13 @@ export default function RelationshipGraphInteractive({
   entityId,
   depth = 2,
   className = '',
-  onNodeClick,
+  onNodeClick: _onNodeClick,
 }: RelationshipGraphInteractiveProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nodes, setNodes] = useState<GraphNode[]>([]);
   const [edges, setEdges] = useState<GraphEdge[]>([]);
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
 
   useEffect(() => {
     fetchGraph();
@@ -62,12 +60,6 @@ export default function RelationshipGraphInteractive({
     } finally {
       setLoading(false);
     }
-  };
-
-  const nodeColor = (node: GraphNode) => {
-    if (node.id === entityId) return '#ef4444'; // Primary red
-    if (node.level === 1) return '#fca5a5'; // Light red for direct connections
-    return '#fecaca'; // Lighter red for indirect
   };
 
   const handleZoomIn = () => {
