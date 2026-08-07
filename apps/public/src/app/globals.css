@@ -32,6 +32,8 @@
   --color-info-soft: #e7eef7;
   --color-danger: #af402f;
   --color-danger-soft: #fbe9e5;
+  --color-violet: #5b4b8a;
+  --color-violet-soft: #ece7f5;
 
   /* Typography */
   --font-serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', ui-serif, serif;

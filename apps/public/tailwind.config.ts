@@ -31,6 +31,7 @@ export default {
         warning: { DEFAULT: 'var(--color-warning)', soft: 'var(--color-warning-soft)' },
         info: { DEFAULT: 'var(--color-info)', soft: 'var(--color-info-soft)' },
         danger: { DEFAULT: 'var(--color-danger)', soft: 'var(--color-danger-soft)' },
+        violet: { DEFAULT: 'var(--color-violet)', soft: 'var(--color-violet-soft)' },
       },
       fontFamily: {
         serif: ['var(--font-serif)'],
@@ -76,6 +77,7 @@ export default {
       animation: {
         'fade-in': 'fadeIn 240ms var(--ease-standard)',
         'rise-in': 'riseIn 320ms var(--ease-standard)',
+        'pulse-ring': 'pulseRing 2.6s ease-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -85,6 +87,11 @@ export default {
         riseIn: {
           '0%': { transform: 'translateY(6px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        pulseRing: {
+          '0%': { transform: 'scale(1)', opacity: '0.35' },
+          '80%': { transform: 'scale(1.9)', opacity: '0' },
+          '100%': { transform: 'scale(1.9)', opacity: '0' },
         },
       },
     },

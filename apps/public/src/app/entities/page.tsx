@@ -1,15 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 
 import PageShell from '../../components/layout/PageShell';
 import Card from '../../components/ui/Card';
 import Container from '../../components/ui/Container';
 import EmptyState from '../../components/ui/EmptyState';
+import FilterChip from '../../components/ui/FilterChip';
 import SearchField from '../../components/ui/SearchField';
 import { CardGridSkeleton } from '../../components/ui/Skeleton';
 import { API_BASE_URL, IS_PREVIEW_MODE } from '../../lib/config';
 import { DEMO_ENTITIES } from '../../lib/demo-data';
+import { ENTITY_CATEGORIES } from '../../lib/entity-categories';
 
 interface Entity {
   id: string;
@@ -20,9 +23,24 @@ interface Entity {
 }
 
 export default function EntitiesPage() {
+  return (
+    <Suspense fallback={<PageShell><div className="min-h-[50vh]" /></PageShell>}>
+      <EntitiesPageContent />
+    </Suspense>
+  );
+}
+
+function EntitiesPageContent() {
+  const searchParams = useSearchParams();
+  const typeParam = searchParams.get('type') ?? '';
   const [entities, setEntities] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
+  const [type, setType] = useState(typeParam);
+
+  useEffect(() => {
+    setType(typeParam);
+  }, [typeParam]);
 
   useEffect(() => {
     if (IS_PREVIEW_MODE) {
@@ -48,9 +66,11 @@ export default function EntitiesPage() {
     fetchEntities();
   }, []);
 
-  const filteredEntities = query
-    ? entities.filter((e) => e.canonicalName.toLowerCase().includes(query.toLowerCase()))
-    : entities;
+  const filteredEntities = entities.filter((e) => {
+    const matchesQuery = query ? e.canonicalName.toLowerCase().includes(query.toLowerCase()) : true;
+    const matchesType = type ? e.entityType?.name.toLowerCase() === type.toLowerCase() : true;
+    return matchesQuery && matchesType;
+  });
 
   return (
     <PageShell>
@@ -58,7 +78,7 @@ export default function EntitiesPage() {
         <Container>
           <h1 className="text-h1 font-serif text-ink">Varlıklar</h1>
           <p className="mt-2 max-w-xl text-body text-ink-muted">
-            Holding, şirket, sendika ve kamu kurumu profillerinin tamamı.
+            Holding, şirket, sendika, banka ve kamu kurumu profillerinin tamamı.
           </p>
           <div className="mt-6 max-w-md">
             <SearchField
@@ -67,6 +87,16 @@ export default function EntitiesPage() {
               placeholder="Varlık ara…"
               aria-label="Varlık ara"
             />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <FilterChip active={!type} onClick={() => setType('')}>
+              Tümü
+            </FilterChip>
+            {ENTITY_CATEGORIES.map((cat) => (
+              <FilterChip key={cat.code} active={type === cat.typeName} onClick={() => setType(cat.typeName)}>
+                {cat.label}
+              </FilterChip>
+            ))}
           </div>
         </Container>
       </div>

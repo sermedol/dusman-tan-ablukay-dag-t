@@ -1,55 +1,27 @@
 'use client';
 
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import HeroNetworkArt from '../components/HeroNetworkArt';
 import PageShell from '../components/layout/PageShell';
+import type { Location } from '../components/MapComponent';
+import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Container from '../components/ui/Container';
 import SearchField from '../components/ui/SearchField';
+import { API_BASE_URL, IS_PREVIEW_MODE } from '../lib/config';
+import { DEMO_LOCATIONS, DEMO_RELATIONS, DEMO_STRUGGLES } from '../lib/demo-data';
+import { CATEGORY_CARD_CLASSES, ENTITY_CATEGORIES } from '../lib/entity-categories';
+import { getStruggleType } from '../lib/struggle-taxonomy';
 
-const ENTRY_POINTS = [
-  {
-    href: '/harita',
-    title: 'Haritada Keşfet',
-    description: 'Tesisleri, maden sahalarını ve direniş noktalarını coğrafi olarak incele.',
-    icon: (
-      <path
-        d="M9 3.5v13M15 6.5v13M4 5l5-1.5 6 2 5-1.5v13l-5 1.5-6-2-5 1.5V5z"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-    ),
-  },
-  {
-    href: '/ag',
-    title: 'İlişki Ağını İncele',
-    description: 'Sermaye grupları arasındaki sahiplik ve ortaklık bağlarını görselleştir.',
-    icon: (
-      <>
-        <circle cx="6" cy="6" r="2.2" stroke="currentColor" strokeWidth="1.4" />
-        <circle cx="16" cy="5" r="2.2" stroke="currentColor" strokeWidth="1.4" />
-        <circle cx="11" cy="15" r="2.2" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M7.7 7.4L9.6 13M14.3 6.4L12.4 13" stroke="currentColor" strokeWidth="1.4" />
-      </>
-    ),
-  },
-  {
-    href: '/struggles',
-    title: 'Mücadeleleri Gör',
-    description: 'İşçi direnişleri, sendikal örgütlenme ve ekoloji mücadelelerinin arşivi.',
-    icon: (
-      <path
-        d="M10 3l2.2 4.6 5 .7-3.6 3.6.9 5-4.5-2.4L5.5 17l.9-5-3.6-3.6 5-.7L10 3z"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-    ),
-  },
-];
+const MapComponent = dynamic(() => import('../components/MapComponent'), {
+  ssr: false,
+  loading: () => <div className="h-full w-full animate-pulse bg-surface-sunken" />,
+});
 
 const STATS = [
   { value: '1.247', label: 'Varlık Profili' },
@@ -58,9 +30,67 @@ const STATS = [
   { value: '12K+', label: 'Kaynak Kanıtı' },
 ];
 
+interface RelationPreview {
+  id: string;
+  sourceEntity?: { id: string; canonicalName: string };
+  targetEntity?: { id: string; canonicalName: string };
+  relationType?: { name: string };
+}
+
+interface StrugglePreview {
+  id: string;
+  title: string;
+  slug: string;
+  summary?: string;
+  description?: string;
+  type: string;
+  location?: string;
+}
+
 export default function Home() {
   const router = useRouter();
   const [query, setQuery] = useState('');
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [relations, setRelations] = useState<RelationPreview[]>([]);
+  const [struggles, setStruggles] = useState<StrugglePreview[]>([]);
+
+  useEffect(() => {
+    if (IS_PREVIEW_MODE) {
+      setLocations([...DEMO_LOCATIONS]);
+      setRelations([...DEMO_RELATIONS]);
+      setStruggles([...DEMO_STRUGGLES]);
+      return;
+    }
+
+    fetch(`${API_BASE_URL}/public/locations`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Array<{ id: string; name: string; latitude?: number; longitude?: number; entities?: unknown[] }>) => {
+        setLocations(
+          data
+            .filter((loc): loc is typeof loc & { latitude: number; longitude: number } =>
+              typeof loc.latitude === 'number' && typeof loc.longitude === 'number'
+            )
+            .map((loc) => ({
+              id: loc.id,
+              name: loc.name,
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+              entityCount: loc.entities?.length ?? 0,
+            }))
+        );
+      })
+      .catch((err) => console.error('Error fetching locations:', err));
+
+    fetch(`${API_BASE_URL}/public/relations?limit=4`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then(setRelations)
+      .catch((err) => console.error('Error fetching relations:', err));
+
+    fetch(`${API_BASE_URL}/public/struggles?limit=3`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: StrugglePreview[]) => setStruggles(data.slice(0, 3)))
+      .catch((err) => console.error('Error fetching struggles:', err));
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,113 +102,254 @@ export default function Home() {
   return (
     <PageShell>
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(60% 50% at 50% 0%, rgba(154, 47, 38, 0.07) 0%, rgba(154, 47, 38, 0) 70%)',
-          }}
-        />
-        <Container className="relative flex flex-col items-center py-20 text-center sm:py-28">
-          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-1.5 text-caption font-semibold text-ink-muted">
-            Kaynağa dayalı araştırma platformu
-          </span>
+      <section className="relative overflow-hidden">
+        <Container className="grid grid-cols-1 items-center gap-10 pt-14 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-6">
+          <div className="max-w-xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-1.5 text-caption font-semibold text-ink-muted">
+              Kaynağa dayalı araştırma platformu
+            </span>
 
-          <h1 className="max-w-3xl text-h1 font-serif text-ink sm:text-display sm:leading-[1.1] lg:text-display-lg">
-            Düşmanı Tanı, Ablukayı Dağıt
-          </h1>
+            <h1 className="mt-6 text-display font-serif leading-[1.05] text-ink sm:text-display-lg">
+              Sermayenin haritasını çıkarıyor,{' '}
+              <span className="text-accent">ablukayı dağıtıyoruz.</span>
+            </h1>
 
-          <p className="mt-6 max-w-xl text-body-lg leading-relaxed text-ink-muted">
-            Türkiye&rsquo;de sermayenin gerçek yapısını, gücün nasıl örgütlendiğini ve direniş
-            alanlarının nereye kadar uzandığını gösterir.
-          </p>
+            <p className="mt-6 max-w-md text-body-lg leading-relaxed text-ink-muted">
+              Holdinglerden şirketlere, bankalardan kamu kurumlarına; ihalelerden teşviklere,
+              direnişlerden davalara kadar bütün bağlantıları görün, gerçeği birlikte ortaya
+              çıkaralım.
+            </p>
 
-          <form onSubmit={handleSearch} className="mt-10 flex w-full max-w-xl flex-col gap-3 sm:flex-row">
-            <SearchField
-              size="lg"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Bir varlık, kişi veya ilişki ara…"
-              aria-label="Platformda ara"
-            />
-            <Button type="submit" size="lg" className="shrink-0 bg-accent hover:bg-accent-strong">
-              Ara
-            </Button>
-          </form>
-
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-body-sm text-ink-muted">
-            <span>Örnek aramalar:</span>
-            <button
-              type="button"
-              onClick={() => router.push('/entities')}
-              className="underline decoration-border-strong underline-offset-4 hover:text-ink hover:decoration-ink-muted"
-            >
-              holding yapıları
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push('/struggles')}
-              className="underline decoration-border-strong underline-offset-4 hover:text-ink hover:decoration-ink-muted"
-            >
-              madencilik karşıtı direniş
-            </button>
-          </div>
-        </Container>
-      </section>
-
-      {/* Entry points */}
-      <section className="py-16 sm:py-20">
-        <Container>
-          <div className="mb-10 flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-h2 font-serif text-ink">Keşfetmeye başla</h2>
-              <p className="mt-2 text-body text-ink-muted">Üç farklı bakış açısıyla aynı veriye erişin.</p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Button href="/harita" size="lg" className="bg-accent hover:bg-accent-strong">
+                Haritayı Keşfet
+              </Button>
+              <Button href="/ag" variant="secondary" size="lg">
+                Nasıl Çalışır?
+              </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-            {ENTRY_POINTS.map((item) => (
-              <Card
-                key={item.href}
-                href={item.href}
-                padding="lg"
-                className="group flex flex-col gap-4"
+          <div className="mx-auto w-full max-w-md lg:max-w-none">
+            <HeroNetworkArt />
+          </div>
+        </Container>
+
+        {/* Floating search module */}
+        <Container className="relative z-10 -mt-4 sm:-mt-8">
+          <div className="rounded-xl border border-border bg-surface p-5 shadow-lg sm:p-6">
+            <form onSubmit={handleSearch} className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="flex-1">
+                <SearchField
+                  size="lg"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Şirket, holding, kişi, kurum, ihale, proje, direniş…"
+                  aria-label="Platformda ara"
+                />
+              </div>
+              <Button type="submit" size="lg" className="bg-ink hover:bg-accent-strong sm:shrink-0">
+                Ara
+              </Button>
+            </form>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href="/entities"
+                className="rounded-full border border-ink bg-ink px-3.5 py-1.5 text-body-sm font-medium text-white"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-md bg-accent-soft text-accent-strong transition-transform duration-base ease-standard group-hover:scale-105">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                    {item.icon}
-                  </svg>
-                </span>
-                <div>
-                  <h3 className="text-h3 text-ink">{item.title}</h3>
-                  <p className="mt-1.5 text-body-sm leading-relaxed text-ink-muted">{item.description}</p>
-                </div>
-                <span className="mt-auto inline-flex items-center gap-1 text-body-sm font-medium text-accent-strong">
-                  İncele
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" className="transition-transform duration-base ease-standard group-hover:translate-x-0.5">
-                    <path d="M3 7h8M8 3.5L11.5 7 8 10.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-              </Card>
-            ))}
+                Tümü
+              </Link>
+              {ENTITY_CATEGORIES.map((cat) => (
+                <Link
+                  key={cat.code}
+                  href={`/entities?type=${encodeURIComponent(cat.typeName)}`}
+                  className="rounded-full border border-border bg-surface px-3.5 py-1.5 text-body-sm font-medium text-ink-soft transition-colors duration-base ease-standard hover:border-border-strong"
+                >
+                  {cat.label}
+                </Link>
+              ))}
+            </div>
           </div>
         </Container>
       </section>
 
-      {/* Stats */}
-      <section className="border-t border-border bg-surface py-16 sm:py-20">
+      {/* Bir Bakışta - flat, divider-based, no boxes */}
+      <section className="py-16 sm:py-20">
         <Container>
-          <h2 className="text-center text-h2 font-serif text-ink">Platform genel bakış</h2>
-          <div className="mx-auto mt-10 grid max-w-3xl grid-cols-2 gap-8 sm:grid-cols-4">
+          <div className="flex flex-col divide-y divide-border border-y border-border sm:flex-row sm:divide-x sm:divide-y-0">
             {STATS.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-display font-serif text-accent-strong">{stat.value}</div>
+              <div key={stat.label} className="flex-1 px-2 py-6 text-center sm:py-8">
+                <div className="text-display font-serif text-ink">{stat.value}</div>
                 <div className="mt-1 text-body-sm text-ink-muted">{stat.label}</div>
               </div>
             ))}
           </div>
+        </Container>
+      </section>
+
+      {/* Haritada Neler Var - dominant map moment */}
+      <section className="py-4 sm:py-8">
+        <Container>
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,340px)_1fr] lg:items-center">
+            <div>
+              <h2 className="text-h1 font-serif text-ink">Haritada Neler Var?</h2>
+              <p className="mt-4 text-body leading-relaxed text-ink-muted">
+                Türkiye&rsquo;nin dört bir yanındaki sermaye örgütlenmelerini, kamu ilişkilerini,
+                madenleri, santralleri, limanları ve direniş noktalarını keşfedin.
+              </p>
+              <div className="mt-6 flex flex-col gap-2.5">
+                {[
+                  { label: 'Holdingler & Şirketler', tone: 'bg-accent' },
+                  { label: 'Kamu Kurumları', tone: 'bg-success' },
+                  { label: 'Direniş Noktaları', tone: 'bg-warning' },
+                  { label: 'Ekoloji Mücadeleleri', tone: 'bg-[#316647]' },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-center gap-2.5 text-body-sm text-ink-soft">
+                    <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full ${row.tone}`} />
+                    {row.label}
+                  </div>
+                ))}
+              </div>
+              <Button href="/harita" variant="secondary" className="mt-8">
+                Haritaya Git
+              </Button>
+            </div>
+
+            <div className="relative h-[420px] overflow-hidden rounded-xl border border-border shadow-md sm:h-[520px]">
+              {locations.length > 0 ? (
+                <MapComponent locations={locations} />
+              ) : (
+                <div className="h-full w-full animate-pulse bg-surface-sunken" />
+              )}
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* Keşfet - category cards, duotone, no fake photography */}
+      <section className="py-20 sm:py-28">
+        <Container>
+          <div className="mb-10 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-h1 font-serif text-ink">Keşfet</h2>
+              <p className="mt-2 text-body text-ink-muted">Veri kategorilerimiz arasında gezinin, bağlantıları ortaya çıkarın.</p>
+            </div>
+            <Link href="/entities" className="hidden shrink-0 text-body-sm font-medium text-accent-strong sm:block">
+              Tüm Kategoriler →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {ENTITY_CATEGORIES.map((cat) => (
+              <Link
+                key={cat.code}
+                href={`/entities?type=${encodeURIComponent(cat.typeName)}`}
+                className={`group flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-lg p-5 transition-transform duration-base ease-standard hover:-translate-y-1 ${CATEGORY_CARD_CLASSES[cat.tone]}`}
+              >
+                <span className="text-h3 font-serif text-ink transition-transform duration-slow ease-standard group-hover:-translate-y-1">
+                  {cat.label}
+                </span>
+                <span className="mt-1.5 text-body-sm leading-snug text-ink-soft">{cat.description}</span>
+              </Link>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* Son Eklenen Bağlantılar */}
+      <section className="border-t border-border py-20 sm:py-28">
+        <Container className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,320px)_1fr]">
+          <div>
+            <h2 className="text-h1 font-serif text-ink">Son Eklenen Bağlantılar</h2>
+            <p className="mt-4 text-body leading-relaxed text-ink-muted">
+              Platformun temel değeri burada: varlıklar arasındaki sahiplik, ortaklık, ihale ve
+              destek ilişkilerini kaynağıyla birlikte görün.
+            </p>
+            <Button href="/relations" variant="secondary" className="mt-6">
+              Tüm İlişkiler
+            </Button>
+          </div>
+
+          <div className="flex flex-col divide-y divide-border border-t border-border">
+            {relations.map((rel) =>
+              rel.sourceEntity && rel.targetEntity ? (
+                <div key={rel.id} className="flex flex-wrap items-center gap-3 py-5 text-body">
+                  <Link href={`/entity/${rel.sourceEntity.id}`} className="font-semibold text-ink hover:text-accent-strong">
+                    {rel.sourceEntity.canonicalName}
+                  </Link>
+                  <span className="flex items-center gap-2 text-body-sm text-ink-faint">
+                    <span className="h-px w-6 bg-border-strong" aria-hidden="true" />
+                    {rel.relationType?.name ?? 'İlişki'}
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                      <path d="M2 6h7M6 2.5 9.5 6 6 9.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                  <Link href={`/entity/${rel.targetEntity.id}`} className="font-semibold text-ink hover:text-accent-strong">
+                    {rel.targetEntity.canonicalName}
+                  </Link>
+                </div>
+              ) : null
+            )}
+          </div>
+        </Container>
+      </section>
+
+      {/* Güncel Mücadeleler */}
+      <section className="border-t border-border bg-surface py-20 sm:py-28">
+        <Container>
+          <div className="mb-10 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-h1 font-serif text-ink">Güncel Mücadeleler</h2>
+              <p className="mt-2 text-body text-ink-muted">İşçi direnişi, sendikal baskı ve ekoloji mücadelelerinden son kayıtlar.</p>
+            </div>
+            <Link href="/struggles" className="hidden shrink-0 text-body-sm font-medium text-accent-strong sm:block">
+              Tüm Mücadeleler →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            {struggles.map((struggle) => {
+              const typeInfo = getStruggleType(struggle.type);
+              return (
+                <Card key={struggle.id} href={`/struggles/${struggle.slug}`} padding="lg" className="flex flex-col gap-3">
+                  <Badge tone={typeInfo.tone} className="w-fit">
+                    {typeInfo.label}
+                  </Badge>
+                  <h3 className="text-h4 text-ink">{struggle.title}</h3>
+                  <p className="line-clamp-2 text-body-sm leading-relaxed text-ink-muted">
+                    {struggle.summary ?? struggle.description}
+                  </p>
+                  {struggle.location && <span className="mt-auto text-caption text-ink-faint">{struggle.location}</span>}
+                </Card>
+              );
+            })}
+          </div>
+        </Container>
+      </section>
+
+      {/* CTA - the one deliberate dark, cinematic moment */}
+      <section className="relative overflow-hidden bg-ink py-20 text-center sm:py-28">
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.07]"
+          preserveAspectRatio="xMidYMid slice"
+        >
+          <pattern id="ctaGrid" width="48" height="48" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="1" fill="#faf8f4" />
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#ctaGrid)" />
+        </svg>
+        <Container className="relative">
+          <h2 className="mx-auto max-w-2xl text-h1 font-serif text-white sm:text-display">
+            Her bağlantının bir kaynağı var.
+          </h2>
+          <p className="mx-auto mt-4 max-w-lg text-body-lg text-white/70">
+            Platformdaki her ilişki, Resmî Gazete&rsquo;den ticaret siciline, mahkeme kararından
+            habere kadar izlenebilir bir kaynağa dayanır. İlişkileri kaynağıyla birlikte inceleyin.
+          </p>
+          <Button href="/relations" size="lg" className="mt-8 bg-accent hover:bg-accent-strong">
+            Kaynaklı İlişkileri İncele
+          </Button>
         </Container>
       </section>
     </PageShell>
