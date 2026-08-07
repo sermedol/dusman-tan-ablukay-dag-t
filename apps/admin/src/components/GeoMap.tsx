@@ -23,11 +23,11 @@ interface GeoMapProps {
 
 export default function GeoMap({
   markers = [],
-  center = { latitude: 39.9, longitude: 32.8 },
-  zoom = 6,
+  center: _center = { latitude: 39.9, longitude: 32.8 },
+  zoom: _zoom = 6,
   className = '',
   onMarkerClick,
-  clustering = true,
+  clustering: _clustering = true,
 }: GeoMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -68,7 +68,7 @@ export default function GeoMap({
   const addMarkers = () => {
     if (!mapRef.current) return;
 
-    markers.forEach((marker) => {
+    markers.forEach((_marker) => {
       // With MapLibre GL:
       // const el = document.createElement('div');
       // el.className = 'w-8 h-8 bg-red-500 rounded-full border-2 border-white shadow-lg cursor-pointer';
@@ -121,16 +121,22 @@ export default function GeoMap({
     <div className={`relative w-full h-96 bg-slate-100 rounded-lg border border-slate-200 overflow-hidden ${className}`}>
       <div ref={containerRef} className="w-full h-full">
         {/* MapLibre GL canvas */}
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-          <div className="text-center">
-            <FiMapPin className="w-12 h-12 text-slate-400 mx-auto mb-2" />
-            <p className="text-slate-600 text-sm">
-              MapLibre GL harita
-              <br />
-              ({markers.length} işaret)
-            </p>
+        {loading ? (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+            <p className="text-slate-400 text-sm">Harita yükleniyor...</p>
           </div>
-        </div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+            <div className="text-center">
+              <FiMapPin className="w-12 h-12 text-slate-400 mx-auto mb-2" />
+              <p className="text-slate-600 text-sm">
+                MapLibre GL harita
+                <br />
+                ({markers.length} işaret)
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Controls */}

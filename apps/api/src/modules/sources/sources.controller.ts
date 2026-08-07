@@ -77,7 +77,7 @@ export class SourcesController {
   async linkToEntity(
     @Param('id') sourceId: string,
     @Body() dto: LinkToEntityDto,
-    @CurrentUser() user: User,
+    @CurrentUser() _user: User,
   ) {
     return this.sourcesService.linkToEntity(sourceId, dto.entityId, dto.evidenceType);
   }
@@ -87,7 +87,7 @@ export class SourcesController {
   async linkToRelation(
     @Param('id') sourceId: string,
     @Param('relationId') relationId: string,
-    @CurrentUser() user: User,
+    @CurrentUser() _user: User,
   ) {
     return this.sourcesService.linkToRelation(sourceId, relationId);
   }

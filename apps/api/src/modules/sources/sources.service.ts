@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma, ReliabilityLevel, VerificationStatus } from '@prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreateSourceDto, UpdateSourceDto } from './dto';
 import * as crypto from 'crypto';
@@ -17,6 +18,7 @@ export class SourcesService {
     return this.prisma.source.create({
       data: {
         ...dto,
+        metadataJson: dto.metadataJson as Prisma.InputJsonValue | undefined,
         checksum,
         createdBy: userId,
       },
@@ -40,8 +42,12 @@ export class SourcesService {
     return this.prisma.source.findMany({
       where: {
         ...(filters?.sourceTypeId && { sourceTypeId: filters.sourceTypeId }),
-        ...(filters?.reliabilityLevel && { reliabilityLevel: filters.reliabilityLevel }),
-        ...(filters?.verificationStatus && { verificationStatus: filters.verificationStatus }),
+        ...(filters?.reliabilityLevel && {
+          reliabilityLevel: filters.reliabilityLevel as ReliabilityLevel,
+        }),
+        ...(filters?.verificationStatus && {
+          verificationStatus: filters.verificationStatus as VerificationStatus,
+        }),
       },
       include: {
         sourceType: true,
@@ -80,7 +86,9 @@ export class SourcesService {
   }
 
   async findByChecksum(checksum: string) {
-    return this.prisma.source.findUnique({
+    // checksum has no unique constraint in the schema (only indexed), so we
+    // look up the first match rather than using findUnique.
+    return this.prisma.source.findFirst({
       where: { checksum },
       include: {
         sourceType: true,
@@ -91,11 +99,16 @@ export class SourcesService {
   async update(id: string, dto: UpdateSourceDto, userId: string) {
     await this.findById(id);
 
+    // Note: unlike Entity/Relation/Struggle, the Source model does not track
+    // an `updatedBy` field, so `userId` is accepted for API symmetry but not
+    // persisted here.
+    void userId;
+
     return this.prisma.source.update({
       where: { id },
       data: {
         ...dto,
-        updatedBy: userId,
+        metadataJson: dto.metadataJson as Prisma.InputJsonValue | undefined,
       },
       include: {
         sourceType: true,

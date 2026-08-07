@@ -8,11 +8,7 @@ export class RolesService {
   async findAll() {
     return this.prisma.role.findMany({
       include: {
-        permissions: {
-          include: {
-            permission: true,
-          },
-        },
+        permissions: true,
       },
       orderBy: { name: 'asc' },
     });
@@ -22,11 +18,7 @@ export class RolesService {
     const role = await this.prisma.role.findUnique({
       where: { id },
       include: {
-        permissions: {
-          include: {
-            permission: true,
-          },
-        },
+        permissions: true,
       },
     });
 

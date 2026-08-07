@@ -5,7 +5,6 @@ import {
   IsNotEmpty,
   IsArray,
   IsObject,
-  IsUrl,
 } from 'class-validator';
 
 export class CreateImportDto {

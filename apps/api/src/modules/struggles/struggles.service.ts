@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@umutsensen/database';
-import { StruggleType, StruggleStatus } from '@prisma/client';
+import { PrismaService } from '../../shared/prisma/prisma.service';
+import { StruggleType, StruggleStatus, Visibility } from '@prisma/client';
 
 @Injectable()
 export class StrugglesService {
@@ -27,6 +27,7 @@ export class StrugglesService {
     return this.prisma.struggle.create({
       data: {
         ...data,
+        visibility: data.visibility as Visibility | undefined,
         slug,
         updatedBy: data.createdBy,
       },

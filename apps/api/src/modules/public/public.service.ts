@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { StruggleType } from '@prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 
 @Injectable()
@@ -7,7 +8,6 @@ export class PublicService {
 
   async search(query: string, limit?: number) {
     const take = limit || 20;
-    const searchQuery = `%${query.toLowerCase()}%`;
 
     const [entities, relations, sources] = await Promise.all([
       this.prisma.entity.findMany({
@@ -36,7 +36,8 @@ export class PublicService {
         where: {
           OR: [
             { title: { contains: query, mode: 'insensitive' } },
-            { content: { contains: query, mode: 'insensitive' } },
+            { notes: { contains: query, mode: 'insensitive' } },
+            { quoteExcerpt: { contains: query, mode: 'insensitive' } },
           ],
         },
         include: { sourceType: true },
@@ -63,8 +64,8 @@ export class PublicService {
         id: s.id,
         type: 'source' as const,
         title: s.title,
-        description: s.content?.substring(0, 100),
-        metadata: { sourceType: s.sourceType?.name, url: s.url },
+        description: s.notes?.substring(0, 100),
+        metadata: { sourceType: s.sourceType?.name, url: s.originalUrl },
       })),
     ];
 
@@ -80,7 +81,6 @@ export class PublicService {
           include: {
             source: true,
           },
-          where: { source: { not: undefined } },
         },
       },
     });
@@ -126,11 +126,7 @@ export class PublicService {
   async getPublicLocations() {
     return this.prisma.location.findMany({
       include: {
-        entities: {
-          include: {
-            entity: true,
-          },
-        },
+        entities: true,
       },
       orderBy: { name: 'asc' },
     });
@@ -156,7 +152,7 @@ export class PublicService {
     return this.prisma.struggle.findMany({
       where: {
         visibility: 'public',
-        type: type as any,
+        type: type as StruggleType,
       },
       include: {
         sourceEvidence: { include: { source: true } },

@@ -267,6 +267,9 @@ export class ImportsService {
     } else if (type === 'event') {
       // Timeline event storage (if table exists)
       this.logger.debug('Event storage not yet implemented');
+      return null;
     }
+
+    return null;
   }
 }

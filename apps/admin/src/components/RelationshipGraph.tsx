@@ -146,7 +146,10 @@ export function RelationshipGraph({
                   {graph.nodes.map((node) => (
                     <div
                       key={node.id}
-                      className="flex items-center gap-md p-sm rounded-base hover:bg-slate-100 cursor-pointer transition-colors"
+                      className={clsx(
+                        'flex items-center gap-md p-sm rounded-base hover:bg-slate-100 cursor-pointer transition-colors',
+                        selectedNode?.id === node.id && 'bg-slate-100'
+                      )}
                       onClick={() => setSelectedNode(node)}
                       style={{
                         borderLeft: `3px solid ${getNodeColor(node.level)}`,
@@ -175,7 +178,11 @@ export function RelationshipGraph({
                 <p className="text-body-sm font-semibold text-slate-900 mb-md">Connections</p>
                 <div className="space-y-xs">
                   {graph.edges.slice(0, 10).map((edge, idx) => (
-                    <div key={idx} className="flex items-center gap-md text-body-sm">
+                    <div
+                      key={idx}
+                      className="flex items-center gap-md text-body-sm"
+                      style={{ opacity: getConfidenceOpacity(edge.confidence) }}
+                    >
                       <div className="flex-1 flex items-center gap-md min-w-0">
                         <span className="text-slate-600 truncate text-caption">{edge.source}</span>
                         <span className="text-slate-400 flex-shrink-0">→</span>

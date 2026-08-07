@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { BaseRepository, FindOptions } from '../../../shared/repository/base.repository';
 
-interface ImportModel {
+export interface ImportModel {
   id: string;
   name: string;
   sourceType: string;
@@ -24,8 +24,11 @@ type ImportUpdateInput = any;
 export class ImportRepository extends BaseRepository<ImportModel, ImportCreateInput, ImportUpdateInput> {
   constructor(prisma: PrismaService) {
     super(prisma);
-    // Note: This assumes an Import model exists in Prisma schema
-    this.model = prisma.import || null;
+    // Note: There is no standalone `Import` model in the Prisma schema
+    // (import metadata lives on `ImportBatch`/`ImportRow` instead), so this
+    // repository intentionally has no backing model and every method below
+    // guards on `this.model` being unset and degrades gracefully.
+    this.model = null;
   }
 
   /**

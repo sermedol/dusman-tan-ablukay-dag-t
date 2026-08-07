@@ -20,7 +20,7 @@ export const cleanupDatabase = async (): Promise<void> => {
   try {
     // Clean up in correct order considering foreign keys
     await prisma.revision.deleteMany({});
-    await prisma.auditLog.deleteMany({});
+    await prisma.auditEvent.deleteMany({});
     await prisma.timelineEvent.deleteMany({});
     await prisma.relation.deleteMany({});
     await prisma.entity.deleteMany({});
@@ -57,9 +57,10 @@ export const seedTestData = async (): Promise<Record<string, any>> => {
     update: {},
     create: {
       id: 'test-type',
+      code: 'test-type',
       name: 'Test Type',
       description: 'Test entity type',
-      isActive: true,
+      isSearchable: true,
     },
   });
 
@@ -68,7 +69,6 @@ export const seedTestData = async (): Promise<Record<string, any>> => {
     data: {
       canonicalName: 'Test Entity',
       slug: 'test-entity',
-      type: 'organization',
       status: 'active',
       visibility: 'public',
       verificationStatus: 'verified',
@@ -84,9 +84,10 @@ export const seedTestData = async (): Promise<Record<string, any>> => {
     update: {},
     create: {
       id: 'test-rel-type',
+      code: 'test-rel-type',
       name: 'Test Relation',
+      category: 'test',
       description: 'Test relation type',
-      isActive: true,
     },
   });
 

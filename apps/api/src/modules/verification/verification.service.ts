@@ -35,7 +35,7 @@ export class VerificationService {
     });
   }
 
-  async verifyEntity(entityId: string, approve: boolean, userId: string, reason?: string) {
+  async verifyEntity(entityId: string, approve: boolean, userId: string, _reason?: string) {
     const entity = await this.prisma.entity.findUnique({
       where: { id: entityId },
     });

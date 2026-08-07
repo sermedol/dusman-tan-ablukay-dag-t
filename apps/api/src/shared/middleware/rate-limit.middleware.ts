@@ -70,7 +70,7 @@ export class RateLimitMiddleware {
 
     // Track response status for conditional skipping
     const originalJson = res.json.bind(res);
-    res.json = function(data: any) {
+    res.json = function (this: RateLimitMiddleware, data: any) {
       const statusCode = res.statusCode;
 
       if (
@@ -87,7 +87,7 @@ export class RateLimitMiddleware {
       return originalJson.call(res, data);
     }.bind(this);
 
-    next();
+    return next();
   };
 
   /**

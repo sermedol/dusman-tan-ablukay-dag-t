@@ -54,9 +54,11 @@ export function EntitySearch({ onSelect, className, filters }: EntitySearchProps
         // In a real app, this would call search endpoint
         // For now, using list endpoint as fallback
         const data = await apiClient.get('/entities', {
-          q: searchQuery,
-          filter: filterParams.length > 0 ? filterParams : undefined,
-          limit: 10,
+          params: {
+            q: searchQuery,
+            filter: filterParams.length > 0 ? filterParams : undefined,
+            limit: 10,
+          },
         });
 
         setResults(Array.isArray(data) ? data : data.hits || []);

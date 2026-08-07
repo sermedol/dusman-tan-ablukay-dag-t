@@ -13,6 +13,11 @@ export class CreateSourceDto {
   quoteExcerpt?: string;
   notes?: string;
   reliabilityLevel?: 'primary' | 'secondary' | 'tertiary' | 'unreliable';
-  verificationStatus?: 'unverified' | 'verified' | 'disputed';
+  verificationStatus?:
+    | 'unverified'
+    | 'verified'
+    | 'needs_review'
+    | 'source_required'
+    | 'conflicting';
   metadataJson?: Record<string, unknown>;
 }

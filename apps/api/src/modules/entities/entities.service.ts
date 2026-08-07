@@ -1,7 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma, Visibility } from '@prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { RedisService } from '../../shared/cache/redis.service';
 import { CreateEntityDto, UpdateEntityDto } from './dto';
+
+type EntityWithRelations = Prisma.EntityGetPayload<{
+  include: { entityType: true; primaryLocation: true };
+}>;
 
 @Injectable()
 export class EntitiesService {
@@ -22,6 +27,7 @@ export class EntitiesService {
     return this.prisma.entity.create({
       data: {
         ...dto,
+        metadataJson: dto.metadataJson as Prisma.InputJsonValue | undefined,
         slug,
         createdBy: userId,
         updatedBy: userId,
@@ -44,7 +50,7 @@ export class EntitiesService {
     return this.prisma.entity.findMany({
       where: {
         ...(filters?.entityTypeId && { entityTypeId: filters.entityTypeId }),
-        ...(filters?.visibility && { visibility: filters.visibility }),
+        ...(filters?.visibility && { visibility: filters.visibility as Visibility }),
       },
       include: {
         entityType: true,
@@ -56,7 +62,7 @@ export class EntitiesService {
   }
 
   async findById(id: string) {
-    const cached = await this.cache.get(`entity:${id}`);
+    const cached = await this.cache.get<EntityWithRelations>(`entity:${id}`);
     if (cached) return cached;
 
     const entity = await this.prisma.entity.findUnique({
@@ -76,7 +82,7 @@ export class EntitiesService {
   }
 
   async findBySlug(slug: string) {
-    const cached = await this.cache.get(`entity:slug:${slug}`);
+    const cached = await this.cache.get<EntityWithRelations>(`entity:slug:${slug}`);
     if (cached) return cached;
 
     const entity = await this.prisma.entity.findUnique({
@@ -102,6 +108,7 @@ export class EntitiesService {
       where: { id },
       data: {
         ...dto,
+        metadataJson: dto.metadataJson as Prisma.InputJsonValue | undefined,
         updatedBy: userId,
       },
       include: {

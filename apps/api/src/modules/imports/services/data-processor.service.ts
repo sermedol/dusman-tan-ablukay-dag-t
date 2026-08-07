@@ -52,7 +52,7 @@ export class DataProcessorService {
   /**
    * Parse Excel data (placeholder - requires xlsx library)
    */
-  async parseExcel(buffer: Buffer, config?: any): Promise<ImportRecord[]> {
+  async parseExcel(_buffer: Buffer, _config?: any): Promise<ImportRecord[]> {
     this.logger.warn('Excel parsing requires xlsx library installation');
     // Would use: const XLSX = require('xlsx');
     return [];
@@ -61,7 +61,7 @@ export class DataProcessorService {
   /**
    * Parse JSON data
    */
-  async parseJSON(jsonContent: string, config?: any): Promise<ImportRecord[]> {
+  async parseJSON(jsonContent: string, _config?: any): Promise<ImportRecord[]> {
     try {
       const data = JSON.parse(jsonContent);
       const records = Array.isArray(data) ? data : [data];
@@ -226,7 +226,7 @@ export class DataProcessorService {
   /**
    * Extract metadata from record
    */
-  private extractMetadata(data: Record<string, any>): Record<string, any> {
+  private extractMetadata(data: Record<string, any>): Record<string, any> | undefined {
     const excluded = new Set([
       'id',
       'name',

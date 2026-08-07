@@ -4,7 +4,7 @@ import Redis from 'ioredis';
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger('RedisService');
-  private client: Redis;
+  private client!: Redis;
   private readonly ttlMap = {
     entitySearch: 3600,
     relationGraph: 1800,

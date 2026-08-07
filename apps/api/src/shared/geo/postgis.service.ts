@@ -38,7 +38,7 @@ export class PostgisService {
   private async checkPostgisSupport(): Promise<void> {
     try {
       // Check if PostGIS is available in the database
-      const result = await this.prisma.$queryRaw`SELECT version();` as Array<any>;
+      await (this.prisma.$queryRaw`SELECT version();` as Promise<Array<any>>);
       this.logger.log('Database connected');
       // In production, we'd check for PostGIS specifically
       this.enabled = true;
@@ -93,7 +93,7 @@ export class PostgisService {
    * Cluster entities within a bounding box by a grid size
    */
   async clusterEntities(
-    bounds: {
+    _bounds: {
       north: number;
       south: number;
       east: number;
@@ -128,9 +128,9 @@ export class PostgisService {
    * Check if point is within a polygon
    */
   async isWithinPolygon(
-    latitude: number,
-    longitude: number,
-    polygonWkt: string
+    _latitude: number,
+    _longitude: number,
+    _polygonWkt: string
   ): Promise<boolean> {
     if (!this.enabled) {
       this.logger.debug(`Would check if point is within polygon`);

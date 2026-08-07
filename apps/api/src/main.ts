@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import type { Request, Response, NextFunction } from 'express';
 import { AppModule } from './app.module';
 import { createRateLimitMiddleware } from './shared/middleware/rate-limit.middleware';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
@@ -61,7 +62,7 @@ async function bootstrap() {
   );
 
   // Security Headers
-  app.use((req, res, next) => {
+  app.use((_req: Request, res: Response, next: NextFunction) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');

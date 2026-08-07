@@ -4,7 +4,7 @@
  * Handles authentication, error responses, and request/response formatting
  */
 
-interface ApiResponse<T = any> {
+export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: {
@@ -21,6 +21,8 @@ interface ApiResponse<T = any> {
 
 interface RequestOptions extends RequestInit {
   throwOnError?: boolean;
+  /** Query-string parameters, serialized and appended to the endpoint URL. */
+  params?: Record<string, string | number | boolean | string[] | undefined>;
 }
 
 class ApiClient {
@@ -62,9 +64,24 @@ class ApiClient {
     endpoint: string,
     options: RequestOptions = {}
   ): Promise<T> {
-    const { throwOnError = true, ...fetchOptions } = options;
+    const { throwOnError = true, params, ...fetchOptions } = options;
 
-    const url = `${this.baseUrl}${endpoint}`;
+    let url = `${this.baseUrl}${endpoint}`;
+    if (params) {
+      const searchParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(params)) {
+        if (value === undefined) continue;
+        if (Array.isArray(value)) {
+          value.forEach((v) => searchParams.append(key, v));
+        } else {
+          searchParams.set(key, String(value));
+        }
+      }
+      const qs = searchParams.toString();
+      if (qs) {
+        url += (url.includes('?') ? '&' : '?') + qs;
+      }
+    }
 
     try {
       const response = await fetch(url, {

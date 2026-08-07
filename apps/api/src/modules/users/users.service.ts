@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { UserStatus } from '@prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { hashPassword } from '@umutsensen/auth';
 
@@ -22,15 +23,19 @@ export class UsersService {
     }
 
     const passwordHash = await hashPassword(data.password);
+    const fullName = [data.firstName, data.lastName].filter(Boolean).join(' ') || undefined;
+    // The User model has no dedicated `username` input from this endpoint;
+    // derive one from the email's local part as a sensible default.
+    const username = data.email.split('@')[0];
 
     return this.prisma.user.create({
       data: {
         email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
+        username,
+        fullName,
         passwordHash,
         roleId: data.roleId,
-        isActive: true,
+        status: UserStatus.active,
       },
       include: { role: true },
     });
@@ -65,11 +70,27 @@ export class UsersService {
       isActive?: boolean;
     },
   ) {
-    const user = await this.findById(id);
+    await this.findById(id);
+
+    const updateData: {
+      fullName?: string;
+      roleId?: string;
+      status?: UserStatus;
+    } = {};
+
+    if (data.firstName !== undefined || data.lastName !== undefined) {
+      updateData.fullName = [data.firstName, data.lastName].filter(Boolean).join(' ');
+    }
+    if (data.roleId !== undefined) {
+      updateData.roleId = data.roleId;
+    }
+    if (data.isActive !== undefined) {
+      updateData.status = data.isActive ? UserStatus.active : UserStatus.inactive;
+    }
 
     return this.prisma.user.update({
       where: { id },
-      data,
+      data: updateData,
       include: { role: true },
     });
   }

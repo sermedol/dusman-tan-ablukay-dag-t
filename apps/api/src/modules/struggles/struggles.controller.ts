@@ -10,10 +10,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { StrugglesService } from './struggles.service';
-import { JwtAuthGuard } from '@umutsensen/auth';
+import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
-import { CurrentUserData } from '../../shared/types/current-user.types';
 import { StruggleType, StruggleStatus } from '@prisma/client';
+
+interface CurrentUserData {
+  userId: string;
+  email: string;
+  roles: string[];
+  permissions: string[];
+}
 
 @Controller('struggles')
 export class StrugglesController {

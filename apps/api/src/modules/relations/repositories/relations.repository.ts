@@ -6,21 +6,21 @@ import { Relation, Prisma } from '@prisma/client';
 type RelationCreateInput = Prisma.RelationCreateInput;
 type RelationUpdateInput = Prisma.RelationUpdateInput;
 
-interface RelationGraphNode {
+export interface RelationGraphNode {
   id: string;
   name: string;
   type: string;
   level: number;
 }
 
-interface RelationGraphEdge {
+export interface RelationGraphEdge {
   source: string;
   target: string;
   relationType: string;
   confidence: string;
 }
 
-interface RelationGraph {
+export interface RelationGraph {
   nodes: RelationGraphNode[];
   edges: RelationGraphEdge[];
 }
