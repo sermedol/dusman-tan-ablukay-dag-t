@@ -28,6 +28,10 @@
       "outputs": ["coverage/**"],
       "cache": false
     },
+    "test:coverage": {
+      "outputs": ["coverage/**"],
+      "cache": false
+    },
     "test:watch": {
       "cache": false,
       "persistent": true

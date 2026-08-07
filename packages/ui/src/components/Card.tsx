@@ -80,7 +80,11 @@ interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
   ({ className, children, ...props }, ref) => (
-    <div ref={ref} className={clsx('mt-xl pt-lg border-t border-slate-200 flex gap-md justify-end', className)} {...props}>
+    <div
+      ref={ref}
+      className={clsx('mt-xl pt-lg border-t border-slate-200 flex gap-md justify-end', className)}
+      {...props}
+    >
       {children}
     </div>
   )

@@ -9,6 +9,7 @@
     "seed": "node --loader tsx src/seed.ts",
     "reset": "prisma migrate reset --force",
     "generate": "prisma generate",
+    "postinstall": "prisma generate",
     "format": "prettier --write src",
     "type-check": "tsc --noEmit"
   },

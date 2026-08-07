@@ -118,7 +118,11 @@ export const FormActions = React.forwardRef<HTMLDivElement, FormActionsProps>(
     return (
       <div
         ref={ref}
-        className={clsx('flex gap-md pt-lg border-t border-slate-200', alignClasses[align], className)}
+        className={clsx(
+          'flex gap-md pt-lg border-t border-slate-200',
+          alignClasses[align],
+          className
+        )}
         {...props}
       >
         {children}

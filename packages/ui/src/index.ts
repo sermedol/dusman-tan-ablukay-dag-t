@@ -25,11 +25,4 @@ export type { SelectOption } from './components/Select';
 export { Modal } from './components/Modal';
 
 // Form
-export {
-  Form,
-  FormGroup,
-  FormRow,
-  FormError,
-  FormSuccess,
-  FormActions,
-} from './components/Form';
+export { Form, FormGroup, FormRow, FormError, FormSuccess, FormActions } from './components/Form';

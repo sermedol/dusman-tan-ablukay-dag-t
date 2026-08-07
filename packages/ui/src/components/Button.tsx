@@ -27,7 +27,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const variantStyles = {
       primary: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 focus:ring-red-600',
-      secondary: 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 focus:ring-red-600',
+      secondary:
+        'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 focus:ring-red-600',
       tertiary: 'text-slate-600 hover:bg-slate-50 focus:ring-red-600',
       danger: 'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 focus:ring-rose-600',
     };
