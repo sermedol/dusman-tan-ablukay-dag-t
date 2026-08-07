@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { CreateImportDto, UpdateImportDto } from './dto';
 import { ImportRepository } from './repositories/import.repository';
 import { DataProcessorService } from './services/data-processor.service';
-import { CreateImportDto, UpdateImportDto } from './dto';
 
 @Injectable()
 export class ImportsService {
@@ -115,7 +115,7 @@ export class ImportsService {
       const sourceData = await this.fetchSource(importJob.sourceUrl);
 
       // Parse based on source type
-      let records = await this.parseSource(
+      const records = await this.parseSource(
         sourceData,
         importJob.sourceType as any,
         importJob.config

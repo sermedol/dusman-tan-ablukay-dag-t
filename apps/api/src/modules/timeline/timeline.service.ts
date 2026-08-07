@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
-import { TimelineEventRepository } from './repositories/timeline-event.repository';
 import {
   CreateTimelineEventDto,
   UpdateTimelineEventDto,
 } from './dto';
+import { TimelineEventRepository } from './repositories/timeline-event.repository';
 
 @Injectable()
 export class TimelineService {

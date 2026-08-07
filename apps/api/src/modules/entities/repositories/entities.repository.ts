@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Entity, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { BaseRepository, FindOptions } from '../../../shared/repository/base.repository';
-import { Entity, Prisma } from '@prisma/client';
 
 type EntityCreateInput = Prisma.EntityCreateInput;
 type EntityUpdateInput = Prisma.EntityUpdateInput;

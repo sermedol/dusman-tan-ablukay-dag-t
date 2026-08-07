@@ -9,13 +9,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { TimelineService } from './timeline.service';
+import { CurrentUser } from '../../shared/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import {
   CreateTimelineEventDto,
   UpdateTimelineEventDto,
 } from './dto';
-import { CurrentUser } from '../../shared/decorators/current-user.decorator';
-import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
+import { TimelineService } from './timeline.service';
 
 interface User {
   userId: string;

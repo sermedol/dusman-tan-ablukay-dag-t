@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Relation, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { BaseRepository, FindOptions } from '../../../shared/repository/base.repository';
-import { Relation, Prisma } from '@prisma/client';
 
 type RelationCreateInput = Prisma.RelationCreateInput;
 type RelationUpdateInput = Prisma.RelationUpdateInput;

@@ -9,10 +9,10 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { RelationsService } from './relations.service';
-import { CreateRelationDto, UpdateRelationDto } from './dto';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
+import { CreateRelationDto, UpdateRelationDto } from './dto';
+import { RelationsService } from './relations.service';
 
 interface User {
   userId: string;

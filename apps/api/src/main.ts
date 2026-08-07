@@ -1,11 +1,11 @@
-import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import type { Request, Response, NextFunction } from 'express';
 import { AppModule } from './app.module';
-import { createRateLimitMiddleware } from './shared/middleware/rate-limit.middleware';
-import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
+import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { ApiResponseInterceptor } from './shared/interceptors/api-response.interceptor';
+import { createRateLimitMiddleware } from './shared/middleware/rate-limit.middleware';
 
 const logger = new Logger('NestApplication');
 

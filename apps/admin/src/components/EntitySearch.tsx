@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { apiClient } from '@/lib/api-client';
 import { Input, Card, CardContent, Button } from '@dusman/ui';
 import clsx from 'clsx';
 import Link from 'next/link';
+import React, { useState, useCallback, useEffect } from 'react';
+import { apiClient } from '@/lib/api-client';
 
 interface SearchResult {
   id: string;

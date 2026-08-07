@@ -9,10 +9,10 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { SourcesService } from './sources.service';
-import { CreateSourceDto, UpdateSourceDto, LinkToEntityDto } from './dto';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
+import { CreateSourceDto, UpdateSourceDto, LinkToEntityDto } from './dto';
+import { SourcesService } from './sources.service';
 
 interface User {
   userId: string;

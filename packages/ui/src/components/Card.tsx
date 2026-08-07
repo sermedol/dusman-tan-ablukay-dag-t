@@ -1,5 +1,5 @@
-import React from 'react';
 import clsx from 'clsx';
+import React from 'react';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   hoverable?: boolean;

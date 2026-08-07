@@ -7,9 +7,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { VerificationService } from './verification.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
+import { VerificationService } from './verification.service';
 
 interface User {
   userId: string;

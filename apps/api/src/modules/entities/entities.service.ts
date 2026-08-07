@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Prisma, Visibility } from '@prisma/client';
-import { PrismaService } from '../../shared/prisma/prisma.service';
 import { RedisService } from '../../shared/cache/redis.service';
+import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreateEntityDto, UpdateEntityDto } from './dto';
 
 type EntityWithRelations = Prisma.EntityGetPayload<{

@@ -8,8 +8,8 @@ import {
   Body,
   UseGuards,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
+import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {

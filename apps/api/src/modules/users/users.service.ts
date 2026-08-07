@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { UserStatus } from '@prisma/client';
-import { PrismaService } from '../../shared/prisma/prisma.service';
 import { hashPassword } from '@umutsensen/auth';
+import { PrismaService } from '../../shared/prisma/prisma.service';
 
 @Injectable()
 export class UsersService {

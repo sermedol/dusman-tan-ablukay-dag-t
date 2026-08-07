@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { BaseRepository, FindOptions } from '../../../shared/repository/base.repository';
-import { Prisma } from '@prisma/client';
 
 type TimelineEventCreateInput = Prisma.TimelineEventCreateInput;
 type TimelineEventUpdateInput = Prisma.TimelineEventUpdateInput;

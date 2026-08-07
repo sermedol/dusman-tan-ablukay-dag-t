@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { EntitiesService } from './entities.service';
-import { PrismaService } from '../../shared/prisma/prisma.service';
+import { Test, TestingModule } from '@nestjs/testing';
 import { RedisService } from '../../shared/cache/redis.service';
+import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreateEntityDto, UpdateEntityDto } from './dto';
+import { EntitiesService } from './entities.service';
 
 describe('EntitiesService', () => {
   let service: EntitiesService;

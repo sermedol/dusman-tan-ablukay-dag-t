@@ -1,8 +1,8 @@
+import * as crypto from 'crypto';
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Prisma, ReliabilityLevel, VerificationStatus } from '@prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreateSourceDto, UpdateSourceDto } from './dto';
-import * as crypto from 'crypto';
 
 @Injectable()
 export class SourcesService {
