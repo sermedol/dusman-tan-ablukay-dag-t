@@ -12,10 +12,12 @@ import { RolesModule } from './modules/roles/roles.module';
 import { ImportsModule } from './modules/imports/imports.module';
 import { PublicModule } from './modules/public/public.module';
 import { StrugglesModule } from './modules/struggles/struggles.module';
+import { CacheModule } from './shared/cache/cache.module';
 
 @Module({
   imports: [
     PrismaModule,
+    CacheModule,
     HealthModule,
     AuthModule,
     EntitiesModule,

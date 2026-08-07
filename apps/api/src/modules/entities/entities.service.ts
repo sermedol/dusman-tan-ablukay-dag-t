@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { RedisService } from '../../shared/cache/redis.service';
 import { CreateEntityDto, UpdateEntityDto } from './dto';
 
 @Injectable()
 export class EntitiesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: RedisService,
+  ) {}
 
   async create(dto: CreateEntityDto, userId: string) {
     const slug = this.generateSlug(dto.canonicalName);
@@ -52,6 +56,9 @@ export class EntitiesService {
   }
 
   async findById(id: string) {
+    const cached = await this.cache.get(`entity:${id}`);
+    if (cached) return cached;
+
     const entity = await this.prisma.entity.findUnique({
       where: { id },
       include: {
@@ -64,10 +71,14 @@ export class EntitiesService {
       throw new NotFoundException('Entity not found');
     }
 
+    await this.cache.set(`entity:${id}`, entity, 'entitySearch');
     return entity;
   }
 
   async findBySlug(slug: string) {
+    const cached = await this.cache.get(`entity:slug:${slug}`);
+    if (cached) return cached;
+
     const entity = await this.prisma.entity.findUnique({
       where: { slug },
       include: {
@@ -80,13 +91,14 @@ export class EntitiesService {
       throw new NotFoundException('Entity not found');
     }
 
+    await this.cache.set(`entity:slug:${slug}`, entity, 'entitySearch');
     return entity;
   }
 
   async update(id: string, dto: UpdateEntityDto, userId: string) {
     const entity = await this.findById(id);
 
-    return this.prisma.entity.update({
+    const updated = await this.prisma.entity.update({
       where: { id },
       data: {
         ...dto,
@@ -96,13 +108,19 @@ export class EntitiesService {
         entityType: true,
       },
     });
+
+    await this.cache.del(`entity:${id}`, `entity:slug:${entity.slug}`);
+    return updated;
   }
 
   async delete(id: string) {
-    await this.findById(id);
-    return this.prisma.entity.delete({
+    const entity = await this.findById(id);
+    const result = await this.prisma.entity.delete({
       where: { id },
     });
+
+    await this.cache.del(`entity:${id}`, `entity:slug:${entity.slug}`);
+    return result;
   }
 
   private generateSlug(name: string): string {

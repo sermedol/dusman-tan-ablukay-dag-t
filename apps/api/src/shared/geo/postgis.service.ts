@@ -61,27 +61,30 @@ export class PostgisService {
     radiusKm: number,
     limit: number = 10
   ): Promise<NearbyEntity[]> {
-    if (!this.enabled) {
-      this.logger.debug(
-        `Would search for entities near ${latitude}, ${longitude} within ${radiusKm}km`
-      );
+    if (!this.validateCoordinates(latitude, longitude)) {
+      this.logger.warn(`Invalid coordinates: ${latitude}, ${longitude}`);
       return [];
     }
 
     try {
-      // Note: This is a placeholder. With actual PostGIS:
-      // SELECT id, name, ST_Distance(location, ST_MakePoint($1, $2)::geography) / 1000 as distance
-      // FROM entities
-      // WHERE ST_DWithin(location, ST_MakePoint($1, $2)::geography, $3 * 1000)
-      // ORDER BY distance
-      // LIMIT $4
+      const results = await this.prisma.$queryRaw`
+        SELECT
+          id,
+          "canonicalName" as name,
+          ST_Y(location) as latitude,
+          ST_X(location) as longitude,
+          ROUND(CAST(ST_Distance(location, ST_SetSRID(ST_Point(${longitude}, ${latitude}), 4326)::geography) / 1000 AS numeric) , 2) as distance
+        FROM "Entity"
+        WHERE location IS NOT NULL
+          AND ST_DWithin(location, ST_SetSRID(ST_Point(${longitude}, ${latitude}), 4326)::geography, ${radiusKm * 1000})
+        ORDER BY distance
+        LIMIT ${limit}
+      ` as NearbyEntity[];
 
-      this.logger.debug(
-        `Searching for entities near ${latitude}, ${longitude} within ${radiusKm}km`
-      );
-      return [];
+      this.logger.debug(`Found ${results.length} entities near ${latitude}, ${longitude}`);
+      return results;
     } catch (error) {
-      this.logger.error('Nearby search failed', error);
+      this.logger.warn('Nearby search disabled (PostGIS not available)', error);
       return [];
     }
   }

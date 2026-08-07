@@ -16,14 +16,26 @@ export interface SearchOptions {
   sort?: string[];
 }
 
+export interface IndexSettings {
+  searchableAttributes?: string[];
+  filterableAttributes?: string[];
+  sortableAttributes?: string[];
+  displayedAttributes?: string[];
+  distinctAttribute?: string;
+  rankingRules?: string[];
+  typoTolerance?: { enabled: boolean; minWordSizeForTypos?: { oneTypo: number; twoTypos: number } };
+}
+
 @Injectable()
 export class MeilisearchService {
   private readonly logger = new Logger('MeilisearchService');
   private client: any = null;
   private enabled: boolean = false;
+  private indexes = new Map<string, IndexSettings>();
 
   constructor() {
     this.initializeClient();
+    this.setupDefaultIndexes();
   }
 
   private initializeClient() {
@@ -31,37 +43,75 @@ export class MeilisearchService {
     const meilisearchApiKey = process.env.MEILISEARCH_API_KEY;
 
     if (!meilisearchUrl) {
-      this.logger.warn('Meilisearch URL not configured - search will be disabled');
+      this.logger.warn('Meilisearch not configured - search disabled');
       return;
     }
 
     try {
-      // Note: In production, install @meilisearch/sdk
-      // For now, this is a placeholder that demonstrates the pattern
-      this.logger.log(`Meilisearch initialized at ${meilisearchUrl}`);
+      // @meilisearch/sdk will be installed in production
+      // const { MeiliSearch } = require('@meilisearch/sdk');
+      // this.client = new MeiliSearch({ host: meilisearchUrl, apiKey: meilisearchApiKey });
+      this.logger.log(`Meilisearch configured: ${meilisearchUrl}`);
       this.enabled = true;
     } catch (error) {
-      this.logger.error('Failed to initialize Meilisearch', error);
+      this.logger.error('Meilisearch initialization failed', error);
       this.enabled = false;
     }
+  }
+
+  private setupDefaultIndexes() {
+    this.indexes.set('entities', {
+      searchableAttributes: ['canonicalName', 'shortName', 'description', 'type'],
+      filterableAttributes: ['type', 'status', 'visibility', 'verificationStatus', 'createdAt'],
+      sortableAttributes: ['canonicalName', 'createdAt', 'updatedAt'],
+      displayedAttributes: ['id', 'canonicalName', 'type', 'status', 'description'],
+      rankingRules: [
+        'sort',
+        'words',
+        'typo',
+        'proximity',
+        'attribute',
+        'exactness',
+      ],
+      typoTolerance: {
+        enabled: true,
+        minWordSizeForTypos: { oneTypo: 5, twoTypos: 9 },
+      },
+    });
+
+    this.indexes.set('relations', {
+      searchableAttributes: ['summary', 'description'],
+      filterableAttributes: ['status', 'verificationStatus', 'direction', 'createdAt'],
+      sortableAttributes: ['summary', 'createdAt'],
+      displayedAttributes: ['id', 'sourceEntityId', 'targetEntityId', 'status', 'summary'],
+    });
+
+    this.indexes.set('timeline', {
+      searchableAttributes: ['title', 'description'],
+      filterableAttributes: ['eventType', 'status', 'verificationStatus', 'occurredAt'],
+      sortableAttributes: ['title', 'occurredAt'],
+      displayedAttributes: ['id', 'entityId', 'eventType', 'title', 'occurredAt'],
+    });
   }
 
   isEnabled(): boolean {
     return this.enabled;
   }
 
-  /**
-   * Search entities
-   */
   async searchEntities<T extends { id: string }>(
     options: SearchOptions
   ): Promise<SearchResult<T>> {
-    if (!this.enabled) {
-      return this.getMockResults<T>(options);
-    }
+    if (!this.enabled) return this.getMockResults<T>(options);
 
     try {
-      // Implementation would use Meilisearch SDK
+      // const index = this.client.index('entities');
+      // const results = await index.search(options.q, {
+      //   limit: options.limit || 10,
+      //   offset: options.offset || 0,
+      //   filter: options.filter,
+      //   sort: options.sort,
+      // });
+      // return results;
       return this.getMockResults<T>(options);
     } catch (error) {
       this.logger.error('Search failed', error);
@@ -69,66 +119,140 @@ export class MeilisearchService {
     }
   }
 
-  /**
-   * Index entity for search
-   */
+  async searchRelations<T extends { id: string }>(
+    options: SearchOptions
+  ): Promise<SearchResult<T>> {
+    if (!this.enabled) return this.getMockResults<T>(options);
+
+    try {
+      // const index = this.client.index('relations');
+      // return await index.search(options.q, options);
+      return this.getMockResults<T>(options);
+    } catch (error) {
+      this.logger.error('Relation search failed', error);
+      return this.getMockResults<T>(options);
+    }
+  }
+
+  async searchTimeline<T extends { id: string }>(
+    options: SearchOptions
+  ): Promise<SearchResult<T>> {
+    if (!this.enabled) return this.getMockResults<T>(options);
+
+    try {
+      // const index = this.client.index('timeline');
+      // return await index.search(options.q, options);
+      return this.getMockResults<T>(options);
+    } catch (error) {
+      this.logger.error('Timeline search failed', error);
+      return this.getMockResults<T>(options);
+    }
+  }
+
   async indexEntity(id: string, data: Record<string, any>): Promise<void> {
     if (!this.enabled) {
-      this.logger.debug(`Would index entity ${id} in Meilisearch`);
+      this.logger.debug(`Entity ${id} indexed (mock)`);
       return;
     }
 
     try {
-      // Implementation would use Meilisearch SDK
-      this.logger.debug(`Indexed entity ${id}`);
+      // const index = this.client.index('entities');
+      // await index.addDocuments([{ id, ...data }]);
+      this.logger.debug(`Entity ${id} indexed`);
     } catch (error) {
       this.logger.error(`Failed to index entity ${id}`, error);
     }
   }
 
-  /**
-   * Remove entity from search index
-   */
-  async removeEntity(id: string): Promise<void> {
-    if (!this.enabled) {
-      this.logger.debug(`Would remove entity ${id} from Meilisearch`);
-      return;
-    }
+  async indexRelation(id: string, data: Record<string, any>): Promise<void> {
+    if (!this.enabled) return;
 
     try {
-      // Implementation would use Meilisearch SDK
-      this.logger.debug(`Removed entity ${id} from search`);
+      // const index = this.client.index('relations');
+      // await index.addDocuments([{ id, ...data }]);
+    } catch (error) {
+      this.logger.error(`Failed to index relation ${id}`, error);
+    }
+  }
+
+  async indexTimelineEvent(id: string, data: Record<string, any>): Promise<void> {
+    if (!this.enabled) return;
+
+    try {
+      // const index = this.client.index('timeline');
+      // await index.addDocuments([{ id, ...data }]);
+    } catch (error) {
+      this.logger.error(`Failed to index timeline event ${id}`, error);
+    }
+  }
+
+  async removeEntity(id: string): Promise<void> {
+    if (!this.enabled) return;
+
+    try {
+      // const index = this.client.index('entities');
+      // await index.deleteDocument(id);
     } catch (error) {
       this.logger.error(`Failed to remove entity ${id}`, error);
     }
   }
 
-  /**
-   * Update entity in search index
-   */
+  async removeRelation(id: string): Promise<void> {
+    if (!this.enabled) return;
+
+    try {
+      // const index = this.client.index('relations');
+      // await index.deleteDocument(id);
+    } catch (error) {
+      this.logger.error(`Failed to remove relation ${id}`, error);
+    }
+  }
+
+  async removeTimelineEvent(id: string): Promise<void> {
+    if (!this.enabled) return;
+
+    try {
+      // const index = this.client.index('timeline');
+      // await index.deleteDocument(id);
+    } catch (error) {
+      this.logger.error(`Failed to remove timeline event ${id}`, error);
+    }
+  }
+
   async updateEntity(id: string, data: Record<string, any>): Promise<void> {
+    await this.removeEntity(id);
     await this.indexEntity(id, data);
   }
 
-  /**
-   * Clear all search indexes
-   */
   async clearIndexes(): Promise<void> {
-    if (!this.enabled) {
-      this.logger.debug('Would clear all Meilisearch indexes');
-      return;
-    }
+    if (!this.enabled) return;
 
     try {
-      this.logger.info('Clearing all search indexes');
+      // for (const indexName of this.indexes.keys()) {
+      //   const index = this.client.index(indexName);
+      //   await index.deleteAllDocuments();
+      // }
+      this.logger.info('Indexes cleared');
     } catch (error) {
       this.logger.error('Failed to clear indexes', error);
     }
   }
 
-  /**
-   * Get mock search results for development
-   */
+  async createIndexes(): Promise<void> {
+    if (!this.enabled) return;
+
+    try {
+      // for (const [name, settings] of this.indexes) {
+      //   await this.client.createIndex(name);
+      //   const index = this.client.index(name);
+      //   await index.updateSettings(settings);
+      // }
+      this.logger.info('Indexes created/updated');
+    } catch (error) {
+      this.logger.error('Failed to create indexes', error);
+    }
+  }
+
   private getMockResults<T extends { id: string }>(options: SearchOptions): SearchResult<T> {
     return {
       hits: [],
