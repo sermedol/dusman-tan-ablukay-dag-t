@@ -42,12 +42,17 @@ export default function GraphComponent({ relations, onNodeSelect }: GraphCompone
         entities.set(rel.targetEntity.id, rel.targetEntity);
       });
 
-      // Add nodes to graph
-      entities.forEach((entity) => {
+      // Add nodes to graph - Sigma requires every node to have x/y coordinates;
+      // lay them out on a circle since there's no positional data to draw from.
+      const entityList = Array.from(entities.values());
+      entityList.forEach((entity, i) => {
+        const angle = (2 * Math.PI * i) / Math.max(entityList.length, 1);
         graph.addNode(entity.id, {
           label: entity.canonicalName,
           size: 15,
           color: '#dc2626',
+          x: Math.cos(angle) * 100,
+          y: Math.sin(angle) * 100,
         });
       });
 
@@ -139,6 +144,7 @@ export default function GraphComponent({ relations, onNodeSelect }: GraphCompone
         style={{
           width: '100%',
           height: '100%',
+          minHeight: '500px',
           backgroundColor: '#e5e5e5',
         }}
       />

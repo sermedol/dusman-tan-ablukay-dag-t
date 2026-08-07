@@ -62,7 +62,7 @@ export default function HaritaPage() {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9f8f6', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100vh', backgroundColor: '#f9f8f6', display: 'flex', flexDirection: 'column' }}>
       {/* Navigation */}
       <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e5e5', padding: '16px 20px', position: 'relative', zIndex: 20 }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
