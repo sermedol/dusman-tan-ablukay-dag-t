@@ -35,6 +35,12 @@ export default function MapComponent({ locations, onLocationSelect }: MapCompone
         bearing: 0,
       });
 
+      map.current.on('error', (e) => {
+        console.error('Map error:', e.error);
+        setError('Harita şu anda yüklenemiyor. Lütfen daha sonra tekrar deneyin.');
+        setIsLoading(false);
+      });
+
       map.current.on('load', () => {
         // Create GeoJSON from locations
         const geojson: GeoJSON.FeatureCollection<GeoJSON.Point> = {
@@ -73,21 +79,24 @@ export default function MapComponent({ locations, onLocationSelect }: MapCompone
               'circle-color': [
                 'step',
                 ['get', 'point_count'],
-                '#dc2626',
+                '#c17b72',
                 10,
-                '#b91c1c',
+                '#9a2f26',
                 20,
-                '#7f1d1d',
+                '#7a2119',
               ],
+              'circle-opacity': 0.9,
               'circle-radius': [
                 'step',
                 ['get', 'point_count'],
-                20,
+                18,
                 10,
-                30,
+                26,
                 20,
-                40,
+                34,
               ],
+              'circle-stroke-width': 3,
+              'circle-stroke-color': '#faf8f4',
             },
           });
 
@@ -114,10 +123,10 @@ export default function MapComponent({ locations, onLocationSelect }: MapCompone
             source: 'locations',
             filter: ['!', ['has', 'point_count']],
             paint: {
-              'circle-color': '#dc2626',
-              'circle-radius': 6,
-              'circle-stroke-width': 2,
-              'circle-stroke-color': '#fff',
+              'circle-color': '#9a2f26',
+              'circle-radius': 7,
+              'circle-stroke-width': 2.5,
+              'circle-stroke-color': '#faf8f4',
             },
           });
 
@@ -246,42 +255,15 @@ export default function MapComponent({ locations, onLocationSelect }: MapCompone
 
   return (
     <>
-      <div
-        ref={mapContainer}
-        style={{
-          width: '100%',
-          height: '100%',
-          backgroundColor: '#e5e5e5',
-        }}
-      />
+      <div ref={mapContainer} className="h-full w-full bg-surface-sunken" />
       {isLoading && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          zIndex: 10,
-        }}>
-          <p style={{ margin: 0, color: '#666' }}>Harita yükleniyor...</p>
+        <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-surface px-5 py-3 shadow-md">
+          <p className="text-body-sm text-ink-muted">Harita yükleniyor…</p>
         </div>
       )}
       {error && (
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          left: '20px',
-          background: '#fee2e2',
-          color: '#991b1b',
-          padding: '12px',
-          borderRadius: '6px',
-          zIndex: 10,
-          maxWidth: '300px',
-        }}>
-          <p style={{ margin: 0, fontSize: '14px' }}>Hata: {error}</p>
+        <div className="absolute left-5 top-5 z-10 max-w-xs rounded-md bg-danger-soft px-3 py-2 text-body-sm text-danger">
+          Hata: {error}
         </div>
       )}
     </>

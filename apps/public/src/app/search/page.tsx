@@ -4,6 +4,13 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
+import PageShell from '../../components/layout/PageShell';
+import Badge from '../../components/ui/Badge';
+import Card from '../../components/ui/Card';
+import Container from '../../components/ui/Container';
+import EmptyState from '../../components/ui/EmptyState';
+import SearchField from '../../components/ui/SearchField';
+import Skeleton from '../../components/ui/Skeleton';
 import { API_BASE_URL, IS_PREVIEW_MODE } from '../../lib/config';
 import { DEMO_SEARCH_RESULTS } from '../../lib/demo-data';
 
@@ -15,9 +22,21 @@ interface SearchResult {
   metadata?: Record<string, unknown>;
 }
 
+const TYPE_LABEL: Record<SearchResult['type'], string> = {
+  entity: 'Varlık',
+  relation: 'İlişki',
+  source: 'Kaynak',
+};
+
+const TYPE_TONE: Record<SearchResult['type'], 'accent' | 'success' | 'warning'> = {
+  entity: 'accent',
+  relation: 'success',
+  source: 'warning',
+};
+
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', backgroundColor: '#f9f8f6' }} />}>
+    <Suspense fallback={<PageShell><div className="min-h-[50vh]" /></PageShell>}>
       <SearchPageContent />
     </Suspense>
   );
@@ -39,9 +58,7 @@ function SearchPageContent() {
 
     if (IS_PREVIEW_MODE) {
       const needle = q.toLocaleLowerCase('tr');
-      setResults(
-        DEMO_SEARCH_RESULTS.filter((r) => r.title.toLocaleLowerCase('tr').includes(needle))
-      );
+      setResults(DEMO_SEARCH_RESULTS.filter((r) => r.title.toLocaleLowerCase('tr').includes(needle)));
       setLoading(false);
       return;
     }
@@ -49,9 +66,7 @@ function SearchPageContent() {
     const fetchResults = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `${API_BASE_URL}/public/search?q=${encodeURIComponent(q)}`,
-        );
+        const response = await fetch(`${API_BASE_URL}/public/search?q=${encodeURIComponent(q)}`);
         if (!response.ok) throw new Error('Search failed');
         const data = await response.json();
         setResults(data);
@@ -69,144 +84,59 @@ function SearchPageContent() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query)}`);
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9f8f6' }}>
-      {/* Navigation */}
-      <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e5e5', padding: '16px 20px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link href="/" style={{ fontSize: '20px', fontWeight: '700', textDecoration: 'none', color: '#1a1a1a' }}>
-            Umut-Sen Platform
-          </Link>
-          <div style={{ display: 'flex', gap: '24px' }}>
-            <a href="/" style={{ color: '#1a1a1a', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>
-              Anasayfa
-            </a>
-            <a href="/entities" style={{ color: '#1a1a1a', textDecoration: 'none', fontSize: '14px' }}>
-              Varlıklar
-            </a>
-            <a href="/relations" style={{ color: '#1a1a1a', textDecoration: 'none', fontSize: '14px' }}>
-              İlişkiler
-            </a>
-          </div>
-        </div>
-      </nav>
-
-      {/* Search Form */}
-      <div style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e5e5', padding: '24px 20px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px' }}>
-            <input
-              type="text"
-              placeholder="Ara..."
+    <PageShell>
+      <div className="border-b border-border bg-surface py-10">
+        <Container>
+          <form onSubmit={handleSearch} className="mx-auto flex max-w-xl gap-3">
+            <SearchField
+              size="lg"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              style={{
-                flex: 1,
-                padding: '10px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '14px',
-                boxSizing: 'border-box',
-              }}
+              placeholder="Ara…"
+              aria-label="Platformda ara"
+              autoFocus
             />
-            <button
-              type="submit"
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-              }}
-            >
-              Ara
-            </button>
           </form>
-        </div>
+        </Container>
       </div>
 
-      {/* Results */}
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
+      <Container className="py-10">
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <p style={{ color: '#666' }}>Aranıyor...</p>
+          <div className="mx-auto flex max-w-2xl flex-col gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full" />
+            ))}
           </div>
+        ) : !q ? (
+          <EmptyState title="Aramaya başlayın" description="Bir varlık, ilişki ya da kaynak adı yazın." />
         ) : results.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', backgroundColor: 'white', borderRadius: '8px' }}>
-            <p style={{ color: '#666', margin: 0 }}>
-              "{q}" için sonuç bulunamadı.
-            </p>
-          </div>
+          <EmptyState title={`"${q}" için sonuç bulunamadı`} description="Farklı bir anahtar kelime deneyin." />
         ) : (
-          <div>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '24px', color: '#1a1a1a' }}>
-              {results.length} sonuç bulundu
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="mx-auto max-w-2xl">
+            <p className="mb-5 text-body-sm text-ink-muted">{results.length} sonuç bulundu</p>
+            <div className="flex flex-col gap-3">
               {results.map((result) => (
-                <div
-                  key={result.id}
-                  style={{
-                    padding: '20px',
-                    backgroundColor: 'white',
-                    borderRadius: '8px',
-                    border: '1px solid #e5e5e5',
-                    cursor: 'pointer',
-                    transition: 'box-shadow 0.2s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
-                >
-                  <Link
-                    href={`/${result.type}/${result.id}`}
-                    style={{ textDecoration: 'none', color: 'inherit' }}
-                  >
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#1a1a1a' }}>
-                          {result.title}
-                        </h3>
-                        <span style={{
-                          padding: '4px 8px',
-                          backgroundColor:
-                            result.type === 'entity' ? '#dbeafe' :
-                            result.type === 'relation' ? '#dcfce7' : '#fef3c7',
-                          color:
-                            result.type === 'entity' ? '#1e40af' :
-                            result.type === 'relation' ? '#166534' : '#92400e',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: '500',
-                        }}>
-                          {result.type === 'entity' ? 'Varlık' :
-                           result.type === 'relation' ? 'İlişki' : 'Kaynak'}
-                        </span>
-                      </div>
-                      {result.description && (
-                        <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#666', lineHeight: '1.5' }}>
-                          {result.description}
-                        </p>
-                      )}
+                <Card key={result.id} padding="md" className="hover:shadow-sm">
+                  <Link href={`/${result.type}/${result.id}`} className="block">
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="text-h4 text-ink">{result.title}</h3>
+                      <Badge tone={TYPE_TONE[result.type]}>{TYPE_LABEL[result.type]}</Badge>
                     </div>
+                    {result.description && (
+                      <p className="mt-1.5 text-body-sm leading-relaxed text-ink-muted">{result.description}</p>
+                    )}
                   </Link>
-                </div>
+                </Card>
               ))}
             </div>
           </div>
         )}
-      </main>
-
-      {/* Footer */}
-      <footer style={{ backgroundColor: '#2a2a2a', color: 'white', padding: '40px 20px', textAlign: 'center', fontSize: '14px', marginTop: '60px' }}>
-        <p style={{ margin: 0 }}>Umut-Sen Platform © 2024</p>
-      </footer>
-    </div>
+      </Container>
+    </PageShell>
   );
 }

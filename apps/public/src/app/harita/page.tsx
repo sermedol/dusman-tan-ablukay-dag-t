@@ -3,7 +3,9 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
+import SiteHeader from '../../components/layout/SiteHeader';
 import type { Location } from '../../components/MapComponent';
+import Button from '../../components/ui/Button';
 import { API_BASE_URL, IS_PREVIEW_MODE } from '../../lib/config';
 import { DEMO_LOCATIONS } from '../../lib/demo-data';
 
@@ -15,10 +17,10 @@ interface RawLocation {
   entities?: { entity: { id: string; canonicalName: string } }[];
 }
 
-const MapComponent = dynamic(
-  () => import('../../components/MapComponent'),
-  { ssr: false, loading: () => <div style={{ width: '100%', height: '100%', backgroundColor: '#e5e5e5' }} /> }
-);
+const MapComponent = dynamic(() => import('../../components/MapComponent'), {
+  ssr: false,
+  loading: () => <div className="h-full w-full bg-surface-sunken" />,
+});
 
 export default function HaritaPage() {
   const [locations, setLocations] = useState<Location[]>([]);
@@ -37,10 +39,10 @@ export default function HaritaPage() {
         const response = await fetch(`${API_BASE_URL}/public/locations`);
         if (response.ok) {
           const data: RawLocation[] = await response.json();
-          // Filter locations with coordinates
           const validLocations: Location[] = data
-            .filter((loc): loc is RawLocation & { latitude: number; longitude: number } =>
-              typeof loc.latitude === 'number' && typeof loc.longitude === 'number'
+            .filter(
+              (loc): loc is RawLocation & { latitude: number; longitude: number } =>
+                typeof loc.latitude === 'number' && typeof loc.longitude === 'number'
             )
             .map((loc) => ({
               id: loc.id,
@@ -62,92 +64,49 @@ export default function HaritaPage() {
   }, []);
 
   return (
-    <div style={{ height: '100vh', backgroundColor: '#f9f8f6', display: 'flex', flexDirection: 'column' }}>
-      {/* Navigation */}
-      <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e5e5', padding: '16px 20px', position: 'relative', zIndex: 20 }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <a href="/" style={{ fontSize: '20px', fontWeight: '700', textDecoration: 'none', color: '#1a1a1a' }}>
-            Umut-Sen
-          </a>
-          <div style={{ display: 'flex', gap: '24px' }}>
-            <a href="/" style={{ color: '#1a1a1a', textDecoration: 'none', fontSize: '14px' }}>Anasayfa</a>
-            <a href="/harita" style={{ color: '#dc2626', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>Harita</a>
-            <a href="/ag" style={{ color: '#1a1a1a', textDecoration: 'none', fontSize: '14px' }}>İlişki Ağı</a>
-          </div>
-        </div>
-      </nav>
+    <div className="flex h-screen flex-col">
+      <SiteHeader />
 
-      {/* Map Container */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+      <div className="relative flex-1 overflow-hidden">
         {loading ? (
-          <div style={{ width: '100%', height: '100%', backgroundColor: '#e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p style={{ color: '#666' }}>Harita yükleniyor...</p>
+          <div className="flex h-full w-full items-center justify-center bg-surface-sunken">
+            <p className="text-body-sm text-ink-muted">Harita yükleniyor…</p>
           </div>
         ) : locations.length === 0 ? (
-          <div style={{ width: '100%', height: '100%', backgroundColor: '#e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ textAlign: 'center', background: 'white', padding: '40px', borderRadius: '8px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px' }}>Konum Veri Yok</h2>
-              <p style={{ color: '#666', margin: 0 }}>Haritada gösterilecek konum bulunmamaktadır.</p>
+          <div className="flex h-full w-full items-center justify-center bg-surface-sunken">
+            <div className="rounded-lg border border-border bg-surface px-10 py-8 text-center shadow-sm">
+              <h2 className="text-h3 text-ink">Konum Verisi Yok</h2>
+              <p className="mt-2 text-body-sm text-ink-muted">Haritada gösterilecek konum bulunmamaktadır.</p>
             </div>
           </div>
         ) : (
           <MapComponent locations={locations} onLocationSelect={setSelectedLocation} />
         )}
 
-        {/* Info Panel */}
         {selectedLocation && (
-          <div style={{
-            position: 'absolute',
-            bottom: '20px',
-            right: '20px',
-            background: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            border: '1px solid #e5e5e5',
-            maxWidth: '320px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            zIndex: 30,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+          <div className="absolute bottom-5 right-5 z-30 w-full max-w-xs rounded-lg border border-border bg-surface p-5 shadow-lg animate-rise-in">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 4px 0', color: '#1a1a1a' }}>
-                  {selectedLocation.name}
-                </h3>
-                {selectedLocation.entityCount && (
-                  <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>
-                    {selectedLocation.entityCount} varlık
-                  </p>
+                <h3 className="text-h4 text-ink">{selectedLocation.name}</h3>
+                {!!selectedLocation.entityCount && (
+                  <p className="mt-0.5 text-caption text-ink-faint">{selectedLocation.entityCount} varlık</p>
                 )}
               </div>
               <button
                 onClick={() => setSelectedLocation(null)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '20px',
-                  cursor: 'pointer',
-                  padding: 0,
-                  color: '#999',
-                }}
+                aria-label="Kapat"
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-ink-faint hover:text-ink"
               >
                 ✕
               </button>
             </div>
-            <a
+            <Button
               href={`/?q=${encodeURIComponent(selectedLocation.name)}`}
-              style={{
-                display: 'inline-block',
-                padding: '8px 12px',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                borderRadius: '4px',
-                textDecoration: 'none',
-                fontSize: '12px',
-                fontWeight: '500',
-              }}
+              size="sm"
+              className="mt-4 w-full bg-accent hover:bg-accent-strong"
             >
               Konumu Ara
-            </a>
+            </Button>
           </div>
         )}
       </div>

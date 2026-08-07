@@ -8,15 +8,7 @@ export default function PreviewBanner() {
   return (
     <div
       role="status"
-      style={{
-        backgroundColor: '#1a1a1a',
-        color: '#f4d35e',
-        fontSize: '12px',
-        fontWeight: 600,
-        textAlign: 'center',
-        padding: '6px 12px',
-        letterSpacing: '0.02em',
-      }}
+      className="bg-ink px-3 py-1.5 text-center text-tiny font-semibold uppercase tracking-wide text-[#e0b559]"
     >
       Önizleme — bu sayfa temsili/demo veriyle çalışıyor, canlı üretim verisi değildir
     </div>

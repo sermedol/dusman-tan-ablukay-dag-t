@@ -1,9 +1,13 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import PageShell from '../../components/layout/PageShell';
+import Card from '../../components/ui/Card';
+import Container from '../../components/ui/Container';
+import EmptyState from '../../components/ui/EmptyState';
+import SearchField from '../../components/ui/SearchField';
+import { CardGridSkeleton } from '../../components/ui/Skeleton';
 import { API_BASE_URL, IS_PREVIEW_MODE } from '../../lib/config';
 import { DEMO_ENTITIES } from '../../lib/demo-data';
 
@@ -16,7 +20,6 @@ interface Entity {
 }
 
 export default function EntitiesPage() {
-  const router = useRouter();
   const [entities, setEntities] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -45,127 +48,61 @@ export default function EntitiesPage() {
     fetchEntities();
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query)}`);
-    }
-  };
-
   const filteredEntities = query
-    ? entities.filter(e =>
-        e.canonicalName.toLowerCase().includes(query.toLowerCase())
-      )
+    ? entities.filter((e) => e.canonicalName.toLowerCase().includes(query.toLowerCase()))
     : entities;
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9f8f6' }}>
-      {/* Navigation */}
-      <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e5e5', padding: '16px 20px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link href="/" style={{ fontSize: '20px', fontWeight: '700', textDecoration: 'none', color: '#1a1a1a' }}>
-            Umut-Sen
-          </Link>
-          <div style={{ display: 'flex', gap: '24px' }}>
-            <a href="/" style={{ color: '#1a1a1a', textDecoration: 'none', fontSize: '14px' }}>Anasayfa</a>
-            <a href="/entities" style={{ color: '#dc2626', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>Varlıklar</a>
-            <a href="/relations" style={{ color: '#1a1a1a', textDecoration: 'none', fontSize: '14px' }}>İlişkiler</a>
-          </div>
-        </div>
-      </nav>
-
-      {/* Search Bar */}
-      <div style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e5e5', padding: '24px 20px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px' }}>
-            <input
-              type="text"
-              placeholder="Varlık ara..."
+    <PageShell>
+      <div className="border-b border-border bg-surface py-10">
+        <Container>
+          <h1 className="text-h1 font-serif text-ink">Varlıklar</h1>
+          <p className="mt-2 max-w-xl text-body text-ink-muted">
+            Holding, şirket, sendika ve kamu kurumu profillerinin tamamı.
+          </p>
+          <div className="mt-6 max-w-md">
+            <SearchField
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              style={{
-                flex: 1,
-                padding: '10px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '14px',
-                boxSizing: 'border-box',
-              }}
+              placeholder="Varlık ara…"
+              aria-label="Varlık ara"
             />
-            <button
-              type="submit"
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-              }}
-            >
-              Ara
-            </button>
-          </form>
-        </div>
+          </div>
+        </Container>
       </div>
 
-      {/* Content */}
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '32px', color: '#1a1a1a' }}>
-          Tüm Varlıklar ({filteredEntities.length})
-        </h1>
+      <Container className="py-10">
+        <p className="mb-6 text-body-sm text-ink-muted">
+          {loading ? 'Yükleniyor…' : `${filteredEntities.length} varlık`}
+        </p>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-            Yükleniyor...
-          </div>
+          <CardGridSkeleton />
         ) : filteredEntities.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', backgroundColor: 'white', borderRadius: '8px' }}>
-            <p style={{ color: '#666', margin: 0 }}>Varlık bulunamadı</p>
-          </div>
+          <EmptyState
+            title="Varlık bulunamadı"
+            description="Arama kriterlerinize uygun bir varlık kaydı yok."
+          />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filteredEntities.map((entity) => (
-              <Link
-                key={entity.id}
-                href={`/entity/${entity.id}`}
-                style={{
-                  padding: '20px',
-                  backgroundColor: 'white',
-                  borderRadius: '8px',
-                  border: '1px solid #e5e5e5',
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  transition: 'box-shadow 0.2s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
-                onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
-              >
-                <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 8px 0', color: '#1a1a1a' }}>
-                  {entity.canonicalName}
-                </h3>
+              <Card key={entity.id} href={`/entity/${entity.id}`} className="flex flex-col gap-2">
+                <h3 className="text-h4 text-ink">{entity.canonicalName}</h3>
                 {entity.entityType && (
-                  <div style={{ fontSize: '12px', color: '#999', marginBottom: '8px' }}>
+                  <span className="text-caption font-medium uppercase tracking-wide text-ink-faint">
                     {entity.entityType.name}
-                  </div>
+                  </span>
                 )}
                 {entity.description && (
-                  <p style={{ fontSize: '14px', color: '#666', margin: '0', lineHeight: '1.4', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  <p className="line-clamp-2 text-body-sm leading-relaxed text-ink-muted">
                     {entity.description}
                   </p>
                 )}
-              </Link>
+              </Card>
             ))}
           </div>
         )}
-      </main>
-
-      {/* Footer */}
-      <footer style={{ backgroundColor: '#2a2a2a', color: 'white', padding: '40px 20px', textAlign: 'center', fontSize: '14px', marginTop: '60px' }}>
-        <p style={{ margin: 0 }}>Umut-Sen Platform © 2024</p>
-      </footer>
-    </div>
+      </Container>
+    </PageShell>
   );
 }
